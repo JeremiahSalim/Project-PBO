@@ -15,6 +15,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.Timer;
 
 import java.util.Iterator;
 
@@ -94,14 +95,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		if(Gdx.input.isKeyPressed(Input.Keys.S)) hero.y -= 200 * Gdx.graphics.getDeltaTime();
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) hero.y += 200 * Gdx.graphics.getDeltaTime();
 
-		if(Gdx.input.isTouched()) {
-			Vector3 touchPos = new Vector3();
-			touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-			camera.unproject(touchPos);
-			hero.x = touchPos.x - 20 / 2;
-			hero.y = touchPos.y - 20 / 2;
-		}
-
 
 		if(TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster();
 		int monsIndex = 0;
@@ -116,13 +109,20 @@ public class MyGdxGame extends ApplicationAdapter {
 			direction.nor();
 			monster.x += direction.x * 1;
 			monster.y += direction.y * 1;
-			if(monster.overlaps(hero) && TimeUtils.millis() % 99 == 0) {
-				heroObject.setHp(heroObject.getHp() - monsterObject.getAtk());
-				System.out.println(TimeUtils.millis());
-				if(heroObject.getHp() <= 0){
-					System.out.println("GameOver");
+			float delay = 1; // seconds
+
+			Timer.schedule(new Timer.Task(){
+				@Override
+				public void run() {
+					if(monster.overlaps(hero) && TimeUtils.millis() % 99 == 0) {
+						heroObject.setHp(heroObject.getHp() - monsterObject.getAtk());
+						System.out.println("TimeUtils.millis()");
+						if(heroObject.getHp() <= 0){
+							System.out.println("GameOver");
+						}
+					}
 				}
-			}
+			}, delay);
 
 			if(TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
 			int bulletIndex = 0;
