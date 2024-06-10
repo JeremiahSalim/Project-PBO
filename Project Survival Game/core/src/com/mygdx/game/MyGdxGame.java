@@ -64,6 +64,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 		ScreenUtils.clear(1, 0, 0, 1);
+		camera.position.set(hero.x,hero.y,0);
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
@@ -81,12 +82,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		if(Gdx.input.isKeyPressed(Input.Keys.A)) hero.x -= 200 * Gdx.graphics.getDeltaTime();
 		if(Gdx.input.isKeyPressed(Input.Keys.D)) hero.x += 200 * Gdx.graphics.getDeltaTime();
-		if(hero.x < 0) hero.x = 0;
-		if(hero.x > 800 - 64) hero.x = 800 - 64;
 		if(Gdx.input.isKeyPressed(Input.Keys.S)) hero.y -= 200 * Gdx.graphics.getDeltaTime();
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) hero.y += 200 * Gdx.graphics.getDeltaTime();
-		if(hero.y < 0) hero.y = 0;
-		if(hero.y > 480 - 64) hero.y = 480 - 64;
 
 		if(Gdx.input.isTouched()) {
 			Vector3 touchPos = new Vector3();
@@ -136,20 +133,20 @@ public class MyGdxGame extends ApplicationAdapter {
 		Rectangle monster = new Rectangle();
 		int randomize = MathUtils.random(0,3);
 		if(randomize == 0){
-			monster.x = 0;
-			monster.y = MathUtils.random(0, 480-64);
+			monster.x = camera.position.x - 400;
+			monster.y = MathUtils.random(camera.position.y - 240, camera.position.y + 240);
 		}
 		else if(randomize == 1){
-			monster.x = 800-64;
-			monster.y = MathUtils.random(0, 480-64);
+			monster.x = camera.position.x + 400;
+			monster.y = MathUtils.random(camera.position.y - 240, camera.position.y + 240);
 		}
 		else if(randomize == 2){
-			monster.x = MathUtils.random(0, 800-64);
-			monster.y = 0;
+			monster.x = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
+			monster.y = camera.position.y - 240;
 		}
 		else{
-			monster.x = MathUtils.random(0, 800-64);
-			monster.y = 480-64;
+			monster.x = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
+			monster.y = camera.position.y - 400;
 		}
 		monster.width = 64;
 		monster.height = 64;
