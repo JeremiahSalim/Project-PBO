@@ -30,6 +30,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	private long lastSpawnTime;
 	private long lastAttackTime;
 
+	Array<Monster> monsterObjects;
+	Array<Bullet> bulletArray;
+
+	Hero heroObject = new Hero();
+
 
 	@Override
 	public void create () {
@@ -43,6 +48,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		//bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
 
 		bgMusic.setLooping(true);
+		bgMusic.setVolume(0.5f);
 		bgMusic.play();
 
 		camera = new OrthographicCamera();
@@ -55,10 +61,13 @@ public class MyGdxGame extends ApplicationAdapter {
 		hero.height = 30;
 
 		monsters = new Array<Rectangle>();
+		monsterObjects = new Array<>();
 		spawnMonster();
 
 		heroAttacks = new Array<Rectangle>();
+		bulletArray = new Array<>();
 		spawnHeroAtk();
+
 	}
 
 	@Override
@@ -93,33 +102,51 @@ public class MyGdxGame extends ApplicationAdapter {
 			hero.y = touchPos.y - 20 / 2;
 		}
 
+
 		if(TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster();
-		for (Iterator<Rectangle> iter = monsters.iterator(); iter.hasNext(); ) {
-			Rectangle monster = iter.next();
+		int monsIndex = 0;
+		for (Iterator<Rectangle> monsterIter = monsters.iterator(); monsterIter.hasNext(); ) {
+			Rectangle monster = monsterIter.next();
+			Monster monsterObject = monsterObjects.get(monsIndex);
 			Vector2 zombiePos = new Vector2(monster.getPosition(new Vector2()));
 			Vector2 playerPos = new Vector2(hero.getPosition(new Vector2()));
 			Vector2 direction = new Vector2();
-			direction.x = (playerPos.x) - (zombiePos.x);
-			direction.y = (playerPos.y) - (zombiePos.y);
+			direction.x = (playerPos.x + 20/2) - (zombiePos.x + 64/2);
+			direction.y = (playerPos.y + 30/2) - (zombiePos.y +64/2);
 			direction.nor();
 			monster.x += direction.x * 1;
 			monster.y += direction.y * 1;
-			if(monster.y + 64 < 0) iter.remove();
-			if(monster.overlaps(hero)) {
-				//killSound.play();
-				iter.remove();
+			if(monster.overlaps(hero) && TimeUtils.millis() % 99 == 0) {
+				heroObject.setHp(heroObject.getHp() - monsterObject.getAtk());
+				System.out.println(TimeUtils.millis());
+				if(heroObject.getHp() <= 0){
+					System.out.println("GameOver");
+				}
 			}
-		}
 
-		if(TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
-		for (Iterator<Rectangle> iter = heroAttacks.iterator(); iter.hasNext(); ) {
-			Rectangle heroAtk = iter.next();
-			heroAtk.y -= 200 * Gdx.graphics.getDeltaTime();
-			if(heroAtk.y + 64 < 0) iter.remove();
-//			if(heroAtk.overlaps(mon)) {
-//				killSound.play();
-//				iter.remove();
-//			}
+			if(TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
+			int bulletIndex = 0;
+			for (Iterator<Rectangle> bulletIter = heroAttacks.iterator(); bulletIter.hasNext(); ) {
+				Rectangle heroAtk = bulletIter.next();
+				Bullet bullet = bulletArray.get(bulletIndex);
+				heroAtk.x += bullet.getBulletDirection().x * 0.5f;
+				heroAtk.y += bullet.getBulletDirection().y * 0.5f;
+				if(heroAtk.overlaps(monster)) {
+					monsterObject.isAttacked(heroObject);
+					long id = killSound.play();
+					killSound.setVolume(id, 0.2f);
+					bulletIter.remove();
+					bulletArray.removeIndex(bulletIndex);
+					bulletIndex--;
+					if(monsterObject.getHp() <= 0){
+						monsterIter.remove();
+						monsterObjects.removeIndex(monsIndex);
+						monsIndex--;
+					}
+				}
+				bulletIndex++;
+			}
+			monsIndex++;
 		}
 	}
 
@@ -151,6 +178,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		monster.width = 64;
 		monster.height = 64;
 		monsters.add(monster);
+		monsterObjects.add(new Monster());
 		lastSpawnTime = TimeUtils.nanoTime();
 	}
 
@@ -161,6 +189,15 @@ public class MyGdxGame extends ApplicationAdapter {
 		heroAtk.width = 64;
 		heroAtk.height = 64;
 		heroAttacks.add(heroAtk);
+
+		Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(),0);
+		Vector2 heroPos = new Vector2(hero.getPosition(new Vector2()));
+		camera.unproject(touchPos);
+		Vector2 bulletDirection = new Vector2();
+		bulletDirection.x = (touchPos.x) - (heroPos.x);
+		bulletDirection.y = (touchPos.y) - (heroPos.y);
+		bulletDirection.nor();
+		bulletArray.add(new Bullet(bulletDirection));
 		lastAttackTime = TimeUtils.nanoTime();
 	}
 }
