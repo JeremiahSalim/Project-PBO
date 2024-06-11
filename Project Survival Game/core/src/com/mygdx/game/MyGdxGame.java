@@ -8,13 +8,11 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -33,17 +31,15 @@ public class MyGdxGame extends ApplicationAdapter {
 	Array<Rectangle> heroAttacks;
 	private long lastSpawnTime;
 	private long lastAttackTime;
+
 	Array<Monster> monsterObjects;
 	Array<Bullet> bulletArray;
+
 	Hero heroObject = new Hero();
-<<<<<<< HEAD
-	int posXbg1 = 0, posXbg2 = 0;
-=======
 	int screenWidth;
 
 	float timeDelay = 0.2f;
 	float timeSeconds = 0f;
->>>>>>> 5fed4f1193e91c48123fb4fc45d4d0fa52d6a474
 
 	@Override
 	public void create () {
@@ -55,11 +51,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
 		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
 		bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
-<<<<<<< HEAD
-=======
 		//make the bgImage repeated
 		bgImage.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
->>>>>>> 5fed4f1193e91c48123fb4fc45d4d0fa52d6a474
 		blank = new Texture(Gdx.files.internal("bg/blank.jpeg"));
 
 
@@ -94,7 +87,6 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 		ScreenUtils.clear(1, 0, 0, 1);
-
 		camera.position.set(hero.x,hero.y,0);
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
@@ -110,17 +102,8 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.draw(mcAtkImage, heroAtk.x, heroAtk.y);
 		}
 
-<<<<<<< HEAD
-		batch.end();
-
-		//HP BAR (MASIH ERROR)
-//		batch.begin();
-//		batch.draw(blank,hero.getX()-500,hero.getY()-200,Gdx.graphics.getWidth()*heroObject.getHp(),5);
-//		batch.end();
-=======
 		batch.draw(blank,hero.getX()-camera.viewportWidth/2,hero.getY()-camera.viewportHeight/2,screenWidth * ((float) heroObject.getHp()/heroObject.getMaxHp()),5);
 		batch.end();
->>>>>>> 5fed4f1193e91c48123fb4fc45d4d0fa52d6a474
 
 		//Move Hero using WASD on keyboard
 		if(Gdx.input.isKeyPressed(Input.Keys.A)) hero.x -= 150 * Gdx.graphics.getDeltaTime();
@@ -129,7 +112,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) hero.y += 150 * Gdx.graphics.getDeltaTime();
 
 		//Interval time spawn monster
-		if(TimeUtils.nanoTime() - lastSpawnTime > 1000000000) spawnMonster();
+		if(TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster();
 		int monsIndex = 0;
 		for (Iterator<Rectangle> monsterIter = monsters.iterator(); monsterIter.hasNext(); ) {
 			Rectangle monster = monsterIter.next();
