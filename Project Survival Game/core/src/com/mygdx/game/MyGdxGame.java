@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -15,12 +16,13 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.Timer;
 
 import java.util.Iterator;
 
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
-	Texture img, monsImage, mcImage, mcAtkImage, bgImage;
+	Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank;
 	Sound killSound;
 	Music bgMusic;
 	OrthographicCamera camera;
@@ -30,35 +32,49 @@ public class MyGdxGame extends ApplicationAdapter {
 	private long lastSpawnTime;
 	private long lastAttackTime;
 
+	Array<Monster> monsterObjects;
+	Array<Bullet> bulletArray;
+
+	Hero heroObject = new Hero();
+
 
 	@Override
 	public void create () {
+		//Generate Image, Sound, Music
 		batch = new SpriteBatch();
-
 		monsImage = new Texture(Gdx.files.internal("img/mons.png"));
 		mcImage = new Texture(Gdx.files.internal("img/mc20px.png"));
 		mcAtkImage = new Texture(Gdx.files.internal("hero/atk.png"));
 		killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
 		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
 		//bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
+		blank = new Texture(Gdx.files.internal("bg/blank.jpeg"));
+
 
 		bgMusic.setLooping(true);
+		bgMusic.setVolume(0.5f);
 		bgMusic.play();
 
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 800, 480);
 
+		//set hero rectangle position and size
 		hero = new Rectangle();
 		hero.x = 800/2 - 20/2;
 		hero.y = 480/2 - 30/2;
-		hero.width = 20;
+		hero.width = 30;
 		hero.height = 30;
 
+		//generate new monster array rectangle and arrayobject
 		monsters = new Array<Rectangle>();
+		monsterObjects = new Array<>();
 		spawnMonster();
 
+		//generate new hero magic bullet array rectangle and arrayobject
 		heroAttacks = new Array<Rectangle>();
+		bulletArray = new Array<>();
 		spawnHeroAtk();
+
 	}
 
 	@Override
@@ -72,54 +88,83 @@ public class MyGdxGame extends ApplicationAdapter {
 		for(Rectangle monster: monsters) {
 			batch.draw(monsImage, monster.x, monster.y);
 		}
-		batch.end();
 
-		batch.begin();
 		for(Rectangle heroAtk: heroAttacks) {
 			batch.draw(mcAtkImage, heroAtk.x, heroAtk.y);
 		}
+
 		batch.end();
 
+		//HP BAR (MASIH ERROR)
+		batch.begin();
+		batch.draw(blank,hero.getX()-500,hero.getY()-200,Gdx.graphics.getWidth()*heroObject.getHp(),5);
+		batch.end();
+
+		//Move Hero using WASD on keyboard
 		if(Gdx.input.isKeyPressed(Input.Keys.A)) hero.x -= 200 * Gdx.graphics.getDeltaTime();
 		if(Gdx.input.isKeyPressed(Input.Keys.D)) hero.x += 200 * Gdx.graphics.getDeltaTime();
 		if(Gdx.input.isKeyPressed(Input.Keys.S)) hero.y -= 200 * Gdx.graphics.getDeltaTime();
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) hero.y += 200 * Gdx.graphics.getDeltaTime();
 
-		if(Gdx.input.isTouched()) {
-			Vector3 touchPos = new Vector3();
-			touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-			camera.unproject(touchPos);
-			hero.x = touchPos.x - 20 / 2;
-			hero.y = touchPos.y - 20 / 2;
-		}
-
+		//Interval time spawn monster
 		if(TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster();
-		for (Iterator<Rectangle> iter = monsters.iterator(); iter.hasNext(); ) {
-			Rectangle monster = iter.next();
-			Vector2 zombiePos = new Vector2(monster.getPosition(new Vector2()));
-			Vector2 playerPos = new Vector2(hero.getPosition(new Vector2()));
+		int monsIndex = 0;
+		for (Iterator<Rectangle> monsterIter = monsters.iterator(); monsterIter.hasNext(); ) {
+			Rectangle monster = monsterIter.next();
+			Monster monsterObject = monsterObjects.get(monsIndex);
+			//Getting monster and hero position
+			//make all the monster follow hero by keep updating the hero position
+			Vector2 monsterPos = new Vector2(monster.getPosition(new Vector2()));
+			Vector2 heroPos = new Vector2(hero.getPosition(new Vector2()));
 			Vector2 direction = new Vector2();
-			direction.x = (playerPos.x) - (zombiePos.x);
-			direction.y = (playerPos.y) - (zombiePos.y);
+			direction.x = (heroPos.x + 20/2) - (monsterPos.x + 64/2);
+			direction.y = (heroPos.y + 30/2) - (monsterPos.y +64/2);
 			direction.nor();
+			//speed of monster following hero
 			monster.x += direction.x * 1;
 			monster.y += direction.y * 1;
-			if(monster.y + 64 < 0) iter.remove();
-			if(monster.overlaps(hero)) {
-				//killSound.play();
-				iter.remove();
-			}
-		}
+			float delay = 1; // seconds
 
-		if(TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
-		for (Iterator<Rectangle> iter = heroAttacks.iterator(); iter.hasNext(); ) {
-			Rectangle heroAtk = iter.next();
-			heroAtk.y -= 200 * Gdx.graphics.getDeltaTime();
-			if(heroAtk.y + 64 < 0) iter.remove();
-//			if(heroAtk.overlaps(mon)) {
-//				killSound.play();
-//				iter.remove();
-//			}
+			Timer.schedule(new Timer.Task(){
+				//hero got attacked by monster if monster overlaps hero
+				@Override
+				public void run() {
+					if(monster.overlaps(hero) && TimeUtils.millis() % 99 == 0) {
+						heroObject.isAttacked(monsterObject.getAtk());
+						System.out.println(heroObject.getHp());
+						//heroObject.setHp(heroObject.getHp() - monsterObject.getAtk());
+						if(!heroObject.isLive()){
+							System.out.println("GameOver");
+						}
+					}
+				}
+			}, delay);
+
+			//Interval time for hero to shoot magic bullet
+			if(TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
+			//bullet targeting
+			int bulletIndex = 0;
+			for (Iterator<Rectangle> bulletIter = heroAttacks.iterator(); bulletIter.hasNext(); ) {
+				Rectangle heroAtk = bulletIter.next();
+				Bullet bullet = bulletArray.get(bulletIndex);
+				heroAtk.x += bullet.getBulletDirection().x * 0.5f;
+				heroAtk.y += bullet.getBulletDirection().y * 0.5f;
+				if(heroAtk.overlaps(monster)) {
+					monsterObject.isAttacked(heroObject.getAtk());
+					long id = killSound.play();
+					killSound.setVolume(id, 0.2f);
+					bulletIter.remove();
+					bulletArray.removeIndex(bulletIndex);
+					bulletIndex--;
+					if(!monsterObject.isLive()){
+						monsterIter.remove();
+						monsterObjects.removeIndex(monsIndex);
+						monsIndex--;
+					}
+				}
+				bulletIndex++;
+			}
+			monsIndex++;
 		}
 	}
 
@@ -151,6 +196,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		monster.width = 64;
 		monster.height = 64;
 		monsters.add(monster);
+		monsterObjects.add(new Monster());
 		lastSpawnTime = TimeUtils.nanoTime();
 	}
 
@@ -158,9 +204,18 @@ public class MyGdxGame extends ApplicationAdapter {
 		Rectangle heroAtk = new Rectangle();
 		heroAtk.x = hero.x;
 		heroAtk.y = hero.y;
-		heroAtk.width = 64;
-		heroAtk.height = 64;
+		heroAtk.width = 1;
+		heroAtk.height = 1;
 		heroAttacks.add(heroAtk);
+
+		Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(),0);
+		Vector2 heroPos = new Vector2(hero.getPosition(new Vector2()));
+		camera.unproject(touchPos);
+		Vector2 bulletDirection = new Vector2();
+		bulletDirection.x = (touchPos.x) - (heroPos.x);
+		bulletDirection.y = (touchPos.y) - (heroPos.y);
+		bulletDirection.nor();
+		bulletArray.add(new Bullet(bulletDirection));
 		lastAttackTime = TimeUtils.nanoTime();
 	}
 }
