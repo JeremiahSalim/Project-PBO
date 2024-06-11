@@ -2,7 +2,7 @@ package com.mygdx.game;
 
 public class Monster extends Entity implements EntitiyAction{
     public Monster() {
-        super(1500000, 100);
+        super(150, 100);
     }
 
     @Override
