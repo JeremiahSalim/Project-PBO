@@ -1,6 +1,6 @@
 package com.mygdx.game;
 
-public class Entity {
+abstract class Entity {
     private int hp;
     private int atk;
 
@@ -25,7 +25,12 @@ public class Entity {
         this.atk = atk;
     }
 
-    public void isAttacked(Entity entity){
-
+    public boolean isLive() {
+        if(this.hp <= 0){
+            return false;
+        }
+        else{
+            return true;
+        }
     }
 }

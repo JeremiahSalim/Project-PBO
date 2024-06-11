@@ -1,12 +1,13 @@
 package com.mygdx.game;
 
-public class Monster extends Entity{
+public class Monster extends Entity implements EntitiyAction{
     public Monster() {
-        super(150, 10);
+        super(100, 10);
     }
 
     @Override
-    public void isAttacked(Entity entity){
-        this.setHp(this.getHp() - entity.getAtk());
+    public void isAttacked(int damage) {
+        this.setHp(this.getHp() - damage);
     }
+
 }
