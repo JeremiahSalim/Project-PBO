@@ -36,7 +36,14 @@ public class MyGdxGame extends ApplicationAdapter {
 	Array<Monster> monsterObjects;
 	Array<Bullet> bulletArray;
 	Hero heroObject = new Hero();
+<<<<<<< HEAD
 	int posXbg1 = 0, posXbg2 = 0;
+=======
+	int screenWidth;
+
+	float timeDelay = 0.2f;
+	float timeSeconds = 0f;
+>>>>>>> 5fed4f1193e91c48123fb4fc45d4d0fa52d6a474
 
 	@Override
 	public void create () {
@@ -48,6 +55,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
 		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
 		bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
+<<<<<<< HEAD
+=======
+		//make the bgImage repeated
+		bgImage.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+>>>>>>> 5fed4f1193e91c48123fb4fc45d4d0fa52d6a474
 		blank = new Texture(Gdx.files.internal("bg/blank.jpeg"));
 
 
@@ -56,13 +68,13 @@ public class MyGdxGame extends ApplicationAdapter {
 		bgMusic.play();
 
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 800, 480);
+		camera.setToOrtho(false, 1920, 980);
 
 		//set hero rectangle position and size
 		hero = new Rectangle();
-		hero.x = 800/2 - 20/2;
-		hero.y = 480/2 - 30/2;
-		hero.width = 30;
+		hero.x = 1920/2 - 20/2;
+		hero.y = 980/2 - 30/2;
+		hero.width = 20;
 		hero.height = 30;
 
 		//generate new monster array rectangle and arrayobject
@@ -75,6 +87,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		bulletArray = new Array<>();
 		spawnHeroAtk();
 
+		screenWidth = Gdx.graphics.getWidth();
+
 	}
 
 	@Override
@@ -85,6 +99,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
+		//generate repeated infinite background
+		batch.draw(bgImage, camera.position.x - camera.viewportWidth/2, camera.position.y - camera.viewportHeight/2, (int)hero.x-bgImage.getWidth(),bgImage.getHeight() - (int)hero.y, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		batch.draw(mcImage, hero.x, hero.y);
 		for(Rectangle monster: monsters) {
 			batch.draw(monsImage, monster.x, monster.y);
@@ -94,18 +110,23 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.draw(mcAtkImage, heroAtk.x, heroAtk.y);
 		}
 
+<<<<<<< HEAD
 		batch.end();
 
 		//HP BAR (MASIH ERROR)
 //		batch.begin();
 //		batch.draw(blank,hero.getX()-500,hero.getY()-200,Gdx.graphics.getWidth()*heroObject.getHp(),5);
 //		batch.end();
+=======
+		batch.draw(blank,hero.getX()-camera.viewportWidth/2,hero.getY()-camera.viewportHeight/2,screenWidth * ((float) heroObject.getHp()/heroObject.getMaxHp()),5);
+		batch.end();
+>>>>>>> 5fed4f1193e91c48123fb4fc45d4d0fa52d6a474
 
 		//Move Hero using WASD on keyboard
-		if(Gdx.input.isKeyPressed(Input.Keys.A)) hero.x -= 200 * Gdx.graphics.getDeltaTime();
-		if(Gdx.input.isKeyPressed(Input.Keys.D)) hero.x += 200 * Gdx.graphics.getDeltaTime();
-		if(Gdx.input.isKeyPressed(Input.Keys.S)) hero.y -= 200 * Gdx.graphics.getDeltaTime();
-		if(Gdx.input.isKeyPressed(Input.Keys.W)) hero.y += 200 * Gdx.graphics.getDeltaTime();
+		if(Gdx.input.isKeyPressed(Input.Keys.A)) hero.x -= 150 * Gdx.graphics.getDeltaTime();
+		if(Gdx.input.isKeyPressed(Input.Keys.D)) hero.x += 150 * Gdx.graphics.getDeltaTime();
+		if(Gdx.input.isKeyPressed(Input.Keys.S)) hero.y -= 150 * Gdx.graphics.getDeltaTime();
+		if(Gdx.input.isKeyPressed(Input.Keys.W)) hero.y += 150 * Gdx.graphics.getDeltaTime();
 
 		//Interval time spawn monster
 		if(TimeUtils.nanoTime() - lastSpawnTime > 1000000000) spawnMonster();
@@ -124,22 +145,21 @@ public class MyGdxGame extends ApplicationAdapter {
 			//speed of monster following hero
 			monster.x += direction.x * 1;
 			monster.y += direction.y * 1;
-			float delay = 1; // seconds
 
-			Timer.schedule(new Timer.Task(){
-				//hero got attacked by monster if monster overlaps hero
-				@Override
-				public void run() {
-					if(monster.overlaps(hero) && TimeUtils.millis() % 99 == 0) {
-						heroObject.isAttacked(monsterObject.getAtk());
-						System.out.println(heroObject.getHp());
-						//heroObject.setHp(heroObject.getHp() - monsterObject.getAtk());
-						if(!heroObject.isLive()){
-							System.out.println("GameOver");
-						}
+
+			if(monster.overlaps(hero)) {
+				//delay the overlaps
+				timeSeconds += Gdx.graphics.getDeltaTime();
+				if(timeSeconds > timeDelay){
+					timeSeconds -= timeDelay;
+					heroObject.isAttacked(monsterObject.getAtk());
+					System.out.println(heroObject.getHp());
+					if(!heroObject.isLive()){
+						System.out.println("GameOver");
 					}
 				}
-			}, delay);
+			}
+
 
 			//Interval time for hero to shoot magic bullet
 			if(TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
@@ -148,8 +168,8 @@ public class MyGdxGame extends ApplicationAdapter {
 			for (Iterator<Rectangle> bulletIter = heroAttacks.iterator(); bulletIter.hasNext(); ) {
 				Rectangle heroAtk = bulletIter.next();
 				Bullet bullet = bulletArray.get(bulletIndex);
-				heroAtk.x += bullet.getBulletDirection().x * 0.5f;
-				heroAtk.y += bullet.getBulletDirection().y * 0.5f;
+				heroAtk.x += bullet.getBulletDirection().x * 3;
+				heroAtk.y += bullet.getBulletDirection().y * 3;
 				if(heroAtk.overlaps(monster)) {
 					monsterObject.isAttacked(heroObject.getAtk());
 					long id = killSound.play();
@@ -179,20 +199,20 @@ public class MyGdxGame extends ApplicationAdapter {
 		Rectangle monster = new Rectangle();
 		int randomize = MathUtils.random(0,3);
 		if(randomize == 0){
-			monster.x = camera.position.x - 400;
-			monster.y = MathUtils.random(camera.position.y - 240, camera.position.y + 240);
+			monster.x = camera.position.x - camera.viewportWidth/2;
+			monster.y = MathUtils.random(camera.position.y - camera.viewportHeight/2, camera.position.y + camera.viewportHeight/2);
 		}
 		else if(randomize == 1){
-			monster.x = camera.position.x + 400;
-			monster.y = MathUtils.random(camera.position.y - 240, camera.position.y + 240);
+			monster.x = camera.position.x + camera.viewportWidth/2;
+			monster.y = MathUtils.random(camera.position.y - camera.viewportHeight/2, camera.position.y + camera.viewportHeight/2);
 		}
 		else if(randomize == 2){
-			monster.x = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
-			monster.y = camera.position.y - 240;
+			monster.x = MathUtils.random(camera.position.x - camera.viewportWidth/2, camera.position.x + camera.viewportWidth/2);
+			monster.y = camera.position.y - camera.viewportHeight/2;
 		}
 		else{
-			monster.x = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
-			monster.y = camera.position.y - 400;
+			monster.x = MathUtils.random(camera.position.x - camera.viewportWidth/2, camera.position.x + camera.viewportWidth/2);
+			monster.y = camera.position.y - camera.viewportHeight/2;
 		}
 		monster.width = 64;
 		monster.height = 64;
