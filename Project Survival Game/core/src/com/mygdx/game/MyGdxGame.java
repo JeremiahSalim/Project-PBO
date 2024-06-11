@@ -51,6 +51,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
 		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
 		bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
+		//make the bgImage repeated
+		bgImage.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 		blank = new Texture(Gdx.files.internal("bg/blank.jpeg"));
 
 
@@ -89,6 +91,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
+		//generate repeated infinite background
+		batch.draw(bgImage, camera.position.x - camera.viewportWidth/2, camera.position.y - camera.viewportHeight/2, (int)hero.x-bgImage.getWidth(),bgImage.getHeight() - (int)hero.y, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		batch.draw(mcImage, hero.x, hero.y);
 		for(Rectangle monster: monsters) {
 			batch.draw(monsImage, monster.x, monster.y);
@@ -125,29 +129,14 @@ public class MyGdxGame extends ApplicationAdapter {
 			monster.x += direction.x * 1;
 			monster.y += direction.y * 1;
 
-//			Timer.schedule(new Timer.Task(){
-//				//hero got attacked by monster if monster overlaps hero
-//				@Override
-//				public void run() {
-//					if(monster.overlaps(hero)) {
-//						heroObject.isAttacked(monsterObject.getAtk());
-//						System.out.println(heroObject.getHp());
-//						//heroObject.setHp(heroObject.getHp() - monsterObject.getAtk());
-//						if(!heroObject.isLive()){
-//							System.out.println("GameOver");
-//						}
-//					}
-//				}
-//			}, 10f);
-
 
 			if(monster.overlaps(hero)) {
+				//delay the overlaps
 				timeSeconds += Gdx.graphics.getDeltaTime();
 				if(timeSeconds > timeDelay){
 					timeSeconds -= timeDelay;
 					heroObject.isAttacked(monsterObject.getAtk());
 					System.out.println(heroObject.getHp());
-					//heroObject.setHp(heroObject.getHp() - monsterObject.getAtk());
 					if(!heroObject.isLive()){
 						System.out.println("GameOver");
 					}
