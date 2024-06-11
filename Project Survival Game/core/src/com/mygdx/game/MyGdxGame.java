@@ -138,7 +138,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					heroObject.isAttacked(monsterObject.getAtk());
 					System.out.println(heroObject.getHp());
 					if(!heroObject.isLive()){
-						System.out.println("GameOver");
+						System.out.println("Game Over");
 					}
 				}
 			}
