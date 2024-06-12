@@ -31,10 +31,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	Array<Rectangle> heroAttacks;
 	private long lastSpawnTime;
 	private long lastAttackTime;
-
 	Array<Monster> monsterObjects;
 	Array<Bullet> bulletArray;
-
 	Hero heroObject = new Hero();
 	int screenWidth;
 
@@ -55,18 +53,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		bgImage.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 		blank = new Texture(Gdx.files.internal("bg/blank.jpeg"));
 
-
 		bgMusic.setLooping(true);
 		bgMusic.setVolume(0.5f);
 		bgMusic.play();
 
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 1920, 980);
+		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		//set hero rectangle position and size
 		hero = new Rectangle();
-		hero.x = 1920/2 - 20/2;
-		hero.y = 980/2 - 30/2;
+		hero.x = Gdx.graphics.getWidth()/2 - 20/2;
+		hero.y = Gdx.graphics.getHeight()/2 - 30/2;
 		hero.width = 20;
 		hero.height = 30;
 
@@ -138,7 +135,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					heroObject.isAttacked(monsterObject.getAtk());
 					System.out.println(heroObject.getHp());
 					if(!heroObject.isLive()){
-						System.out.println("GameOver");
+						System.out.println("Game Over");
 					}
 				}
 			}
