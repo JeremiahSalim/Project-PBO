@@ -30,19 +30,19 @@ public class MyGdxGame extends ApplicationAdapter {
 	Music bgMusic;
 	OrthographicCamera camera;
 	Rectangle hero;
-	Array<Rectangle> monsters;
-	Array<Rectangle> heroAttacks;
+//	Array<Rectangle> monsters;
+//	Array<Rectangle> heroAttacks;
 	private long lastSpawnTime;
 	private long lastAttackTime;
-	Array<Monster> monsterObjects;
-	Array<Bullet> bulletArray;
+//	Array<Monster> monsterObjects;
+	Array<Pair<Rectangle, Bullet>> bulletArray;
 	Hero heroObject = new Hero();
 	int screenWidth;
 	float timeDelay = 0.2f;
 	float timeSeconds = 0f;
 	static boolean leveledUp = false;
-	ArrayList<Rectangle> dropXp;
-	ArrayList<Xp> xpObjects;
+	Array<Pair<Rectangle, Xp>> xpArray;
+	Array<Pair<Rectangle, Monster>> monsArray;
 
 	@Override
 	public void create () {
@@ -73,17 +73,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		hero.width = 20;
 		hero.height = 30;
 
-		//generate new monster array rectangle and arrayobject
-		monsters = new Array<>();
-		monsterObjects = new Array<>();
+		//generate monster array rectangle and arrayobject
+		monsArray = new Array<>();
 
-		//generate new hero magic bullet array rectangle and arrayobject
-		heroAttacks = new Array<>();
+		//generate  bullet array rectangle and arrayobject
 		bulletArray = new Array<>();
 
-		// generate new xp
-		dropXp = new ArrayList<>();
-		xpObjects = new ArrayList<>();
+		// generate xp array
+		xpArray = new Array<>();
 
 		screenWidth = Gdx.graphics.getWidth();
 	}
@@ -100,11 +97,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.draw(mcImage, hero.x, hero.y);
 
 		//Draw image to each monster or heroAtk (bullet)
-		for(Rectangle monster: monsters) {
-			batch.draw(monsImage, monster.x, monster.y);
+		for(Pair<Rectangle, Monster> monster: monsArray) {
+			batch.draw(monsImage, monster.getKey().x, monster.getKey().y);
 		}
-		for(Rectangle heroAtk: heroAttacks) {
-			batch.draw(mcAtkImage, heroAtk.x, heroAtk.y);
+		for(Pair<Rectangle, Bullet> bullet: bulletArray) {
+			batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
 		}
 		//Draw hp bar
 		batch.draw(blank,hero.getX()-camera.viewportWidth/2,hero.getY()-camera.viewportHeight/2,screenWidth * ((float) heroObject.getHp()/heroObject.getMaxHp()),5);
@@ -123,28 +120,26 @@ public class MyGdxGame extends ApplicationAdapter {
 			//Interval time spawn monster
 			if (TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster();
 
-			int monsIndex = 0;
-			for (Iterator<Rectangle> monsterIter = monsters.iterator(); monsterIter.hasNext(); ) {
-				Rectangle monster = monsterIter.next();
-				Monster monsterObject = monsterObjects.get(monsIndex);
+			for (Iterator<Pair<Rectangle, Monster>> monsterIter = monsArray.iterator(); monsterIter.hasNext(); ) {
+				Pair<Rectangle, Monster> monster = monsterIter.next();
 				//Getting monster and hero position
 				//make all the monster follow hero by keep updating the hero position
-				Vector2 monsterPos = new Vector2(monster.getPosition(new Vector2()));
+				Vector2 monsterPos = new Vector2(monster.getKey().getPosition(new Vector2()));
 				Vector2 heroPos = new Vector2(hero.getPosition(new Vector2()));
 				Vector2 direction = new Vector2();
-				direction.x = (heroPos.x + hero.width / 2) - (monsterPos.x + monster.width / 2);
-				direction.y = (heroPos.y + hero.height / 2) - (monsterPos.y + monster.height / 2);
+				direction.x = (heroPos.x + hero.width / 2) - (monsterPos.x + monster.getKey().width / 2);
+				direction.y = (heroPos.y + hero.height / 2) - (monsterPos.y + monster.getKey().height / 2);
 				direction.nor();
 				//speed of monster following hero
-				monster.x += direction.x * 1;
-				monster.y += direction.y * 1;
+				monster.getKey().x += direction.x * 1;
+				monster.getKey().y += direction.y * 1;
 
-				if (monster.overlaps(hero)) {
+				if (monster.getKey().overlaps(hero)) {
 					//delay the overlaps
 					timeSeconds += Gdx.graphics.getDeltaTime();
 					if (timeSeconds > timeDelay) {
 						timeSeconds -= timeDelay;
-						heroObject.isAttacked(monsterObject.getAtk());
+						heroObject.isAttacked(monster.getValue().getAtk());
 						System.out.println(heroObject.getHp());
 						if (!heroObject.isLive()) {
 							System.out.println("Game Over");
@@ -153,48 +148,44 @@ public class MyGdxGame extends ApplicationAdapter {
 				}
 			}
 
-			for (Iterator<Rectangle> bulletIter = heroAttacks.iterator(); bulletIter.hasNext(); ) {
-				Rectangle heroAtk = bulletIter.next();
-				Bullet bullet = bulletArray.get(heroAttacks.indexOf(heroAtk, false));
-				heroAtk.x += bullet.getBulletDirection().x * 3;
-				heroAtk.y += bullet.getBulletDirection().y * 3;
+			for (Iterator<Pair<Rectangle, Bullet>> bulletIter = bulletArray.iterator(); bulletIter.hasNext(); ) {
+				Pair<Rectangle, Bullet> bullet = bulletIter.next();
+				bullet.getKey().x += bullet.getValue().getBulletDirection().x * 10;
+				bullet.getKey().y += bullet.getValue().getBulletDirection().y * 10;
 			}
 
-			int xpIndex = 0;
-			for (Iterator<Rectangle> xpIter = dropXp.iterator(); xpIter.hasNext(); ) {
-				Rectangle exp = xpIter.next();
-				Xp xpObject = xpObjects.get(monsIndex);
-				exp.x = xpObject.getX();
-				exp.y = xpObject.getY();
+
+			for (Iterator<Pair<Rectangle, Xp>> xpIter = xpArray.iterator(); xpIter.hasNext(); ) {
+				Pair<Rectangle, Xp> exp = xpIter.next();
+				exp.getKey().x = exp.getValue().getX();
+				exp.getKey().y = exp.getValue().getY();
 			}
 
 			// Check for collisions
-			Set<Pair<Rectangle, Rectangle>> collisions = new HashSet<>();
-			for (Rectangle heroAtk : heroAttacks) {
-				for (Rectangle monster : monsters) {
-					if (heroAtk.overlaps(monster)) {
-						collisions.add(new Pair<>(heroAtk, monster));
+			Set<Pair<Pair<Rectangle, Bullet>, Pair<Rectangle, Monster>>> collisions = new HashSet<>();
+			for (Pair<Rectangle, Bullet> bullet : bulletArray) {
+				for (Pair<Rectangle, Monster> monster : monsArray) {
+					if (bullet.getKey().overlaps(monster.getKey())) {
+						collisions.add(new Pair<>(bullet, monster));
 					}
 				}
 			}
 
 			// Process collisions
-			for (Pair<Rectangle, Rectangle> collision : collisions) {
-				Rectangle heroAtk = collision.getKey();
-				Rectangle monster = collision.getValue();
-				Monster monsterObject = monsterObjects.get(monsters.indexOf(monster, false));
-				Bullet bullet = bulletArray.get(heroAttacks.indexOf(heroAtk, false));
+			for (Pair<Pair<Rectangle, Bullet>, Pair<Rectangle, Monster>> collision : collisions) {
+				Rectangle bullet = collision.getKey().getKey();
+				Rectangle monster = collision.getValue().getKey();
+				Monster monsterObject = collision.getValue().getValue();
+				Bullet bulletObject = collision.getKey().getValue();
 
 				monsterObject.isAttacked(heroObject.getAtk());
 				long id = killSound.play();
 				killSound.setVolume(id, 0.2f);
-				heroAttacks.removeValue(heroAtk, false);
-				bulletArray.removeValue(bullet, false);
+				bulletArray.removeValue(collision.getKey(), false);
 
 				if (!monsterObject.isLive()) {
 					spawnXp(monster);
-					monsters.removeValue(monster, false);
-					monsterObjects.removeValue(monsterObject, false);
+					monsArray.removeValue(collision.getValue(), false);
 				}
 			}
 			//Interval time for hero to shoot magic bullet
@@ -233,8 +224,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 		monster.width = 64;
 		monster.height = 64;
-		monsters.add(monster);
-		monsterObjects.add(new Monster());
+
+		monsArray.add(new Pair<>(monster, new Monster()));
 		lastSpawnTime = TimeUtils.nanoTime();
 	}
 
@@ -244,30 +235,28 @@ public class MyGdxGame extends ApplicationAdapter {
 		heroAtk.y = hero.y;
 		heroAtk.width = 1;
 		heroAtk.height = 1;
-		heroAttacks.add(heroAtk);
 
 		Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(),0);
 		Vector2 heroPos = new Vector2(hero.getPosition(new Vector2()));
 		camera.unproject(touchPos);
 		Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + hero.width), (touchPos.y) - (heroPos.y + hero.height));
-		bulletArray.add(new Bullet(bulletDirection));
+		bulletArray.add(new Pair<>(heroAtk, new Bullet(bulletDirection)));
 		lastAttackTime = TimeUtils.nanoTime();
 	}
 
 	private void spawnXp(Rectangle _monsters){
 		Rectangle xp = new Rectangle();
-		int randomize = MathUtils.random(0,2);
-		if(randomize == 0){
-			xpObjects.add(new SmallXp(_monsters.x, _monsters.y));
-		}
-		else if(randomize == 1) {
-			xpObjects.add(new MediumXp(_monsters.x, _monsters.y));
-		}
-		else if(randomize == 2){
-			xpObjects.add(new LargeXp(_monsters.x, _monsters.y));
-		}
 		xp.width = 10;
 		xp.height = 10;
-		dropXp.add(xp);
+		int randomize = MathUtils.random(0,2);
+		if(randomize == 0){
+			xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x, _monsters.y)));
+		}
+		else if(randomize == 1) {
+			xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x, _monsters.y)));
+		}
+		else if(randomize == 2){
+			xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x, _monsters.y)));
+		}
 	}
 }

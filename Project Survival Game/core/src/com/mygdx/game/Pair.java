@@ -8,6 +8,8 @@ public class Pair<K,V> {
         this.key = key;
         this.value = value;
     }
+    public Pair() {
+    }
 
     public K getKey() {
         return key;
@@ -16,4 +18,9 @@ public class Pair<K,V> {
     public V getValue() {
         return value;
     }
+
+    public void add(K key, V value){
+        this.key = key;
+        this.value = value;
+    };
 }
