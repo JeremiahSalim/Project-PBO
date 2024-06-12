@@ -8,7 +8,9 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -18,6 +20,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
@@ -45,14 +48,24 @@ public class MyGdxGame extends ApplicationAdapter {
 	static boolean leveledUp = false;
 	Array<Pair<Rectangle, Xp>> xpArray;
 	Array<Pair<Rectangle, Monster>> monsArray;
-	private Viewport viewport;
+	private ScreenViewport viewport;
+
+	private Animation<TextureRegion> mcUp;
+	private Animation<TextureRegion> mcDown;
+	private Animation<TextureRegion> mcLeft;
+	private Animation<TextureRegion> mcRight;
+	private Animation<TextureRegion> mcNortheast;
+	private Animation<TextureRegion> mcNorthwest;
+	private Animation<TextureRegion> mcSoutheast;
+	private Animation<TextureRegion> mcSouthWest;
+	private float stateTime;
 
 	@Override
 	public void create () {
 		//Generate Image, Sound, Music
 		batch = new SpriteBatch();
 		monsImage = new Texture(Gdx.files.internal("img/mons.png"));
-		mcImage = new Texture(Gdx.files.internal("img/mc20px.png"));
+		mcImage = new Texture(Gdx.files.internal("img/mc.png"));
 		mcAtkImage = new Texture(Gdx.files.internal("hero/atk.png"));
 		killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
 		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
@@ -69,14 +82,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		//Generate camera
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera);
+		viewport = new ScreenViewport(camera);
 
 		//set hero rectangle position and size
 		hero = new Rectangle();
-		hero.x = Gdx.graphics.getWidth()/2 - 20/2;
-		hero.y = Gdx.graphics.getHeight()/2 - 30/2;
-		hero.width = 20;
-		hero.height = 30;
+		hero.width = 64;
+		hero.height = (float) (64 * 157) /120;
+		hero.x = Gdx.graphics.getWidth()/2 - hero.width/2;
+		hero.y = Gdx.graphics.getHeight()/2 - hero.height/2;
 
 		//generate monster array rectangle and arrayobject
 		monsArray = new Array<>();
@@ -88,6 +101,96 @@ public class MyGdxGame extends ApplicationAdapter {
 		xpArray = new Array<>();
 
 		screenWidth = Gdx.graphics.getWidth();
+
+		//make mc animation North South
+		Texture rawNS = new Texture("img/N-S.png");
+		TextureRegion[][] NSframes = TextureRegion.split(rawNS, rawNS.getWidth()/11, rawNS.getHeight()/2);
+		TextureRegion[] north = new TextureRegion[9];
+		TextureRegion[] south = new TextureRegion[10];
+		int idx = 0;
+		for (int i = 0; i < 1; i++) {
+			for (int j = 0; j < 9; j++) {
+				north[idx] = NSframes[i][j];
+				idx++;
+			}
+		}
+		idx = 0;
+		for (int i = 1; i < 2; i++) {
+			for (int j = 0; j < 10; j++) {
+				south[idx] = NSframes[i][j];
+				idx++;
+			}
+		}
+		mcUp = new Animation<>(.08f, north);
+		mcDown = new Animation<>(.08f, south);
+
+		//make mc animation West East
+		Texture rawWE = new Texture("img/W-E.png");
+		TextureRegion[][] WEframes = TextureRegion.split(rawWE, rawWE.getWidth()/11, rawWE.getHeight()/2);
+		TextureRegion[] west = new TextureRegion[8];
+		TextureRegion[] east = new TextureRegion[8];
+		idx = 0;
+		for (int i = 0; i < 1; i++) {
+			for (int j = 0; j < 8; j++) {
+				west[idx] = WEframes[i][j];
+				idx++;
+			}
+		}
+		idx = 0;
+		for (int i = 1; i < 2; i++) {
+			for (int j = 0; j < 8; j++) {
+				east[idx] = WEframes[i][j];
+				idx++;
+			}
+		}
+		mcLeft = new Animation<>(.08f, west);
+		mcRight = new Animation<>(.08f, east);
+
+		//make mc animation Southeast SouthWest
+		Texture rawSWSE = new Texture("img/SW-SE.png");
+		TextureRegion[][] SWSEframes = TextureRegion.split(rawSWSE, rawSWSE.getWidth()/11, rawSWSE.getHeight()/2);
+		TextureRegion[] southwest = new TextureRegion[8];
+		TextureRegion[] southeast = new TextureRegion[8];
+		idx = 0;
+		for (int i = 0; i < 1; i++) {
+			for (int j = 0; j < 8; j++) {
+				southwest[idx] = SWSEframes[i][j];
+				idx++;
+			}
+		}
+		idx = 0;
+		for (int i = 1; i < 2; i++) {
+			for (int j = 0; j < 8; j++) {
+				southeast[idx] = SWSEframes[i][j];
+				idx++;
+			}
+		}
+		mcSouthWest = new Animation<>(.08f, southwest);
+		mcSoutheast = new Animation<>(.08f, southeast);
+
+		//make mc animation Northwest, Northeast
+		Texture rawNWNE = new Texture("img/NW-NE.png");
+		TextureRegion[][] NWNEframes = TextureRegion.split(rawNWNE, rawNWNE.getWidth()/11, rawNWNE.getHeight()/2);
+		TextureRegion[] northwest = new TextureRegion[8];
+		TextureRegion[] northeast = new TextureRegion[8];
+		idx = 0;
+		for (int i = 0; i < 1; i++) {
+			for (int j = 0; j < 8; j++) {
+				northwest[idx] = NWNEframes[i][j];
+				idx++;
+			}
+		}
+		idx = 0;
+		for (int i = 1; i < 2; i++) {
+			for (int j = 0; j < 8; j++) {
+				northeast[idx] = NWNEframes[i][j];
+				idx++;
+			}
+		}
+		mcNorthwest = new Animation<>(.08f, northwest);
+		mcNortheast = new Animation<>(.08f, northeast);
+
+		stateTime = 0f;
 	}
 
 	public void resize(int w, int h){
@@ -103,7 +206,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.begin();
 		//generate repeated infinite background
 		batch.draw(bgImage, camera.position.x - camera.viewportWidth/2, camera.position.y - camera.viewportHeight/2, (int)hero.x-bgImage.getWidth(),bgImage.getHeight() - (int)hero.y, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		batch.draw(mcImage, hero.x, hero.y);
+//		batch.draw(mcImage, hero.x, hero.y);
 
 		//Draw image to each monster or heroAtk (bullet)
 		for(Pair<Rectangle, Monster> monster: monsArray) {
@@ -123,11 +226,60 @@ public class MyGdxGame extends ApplicationAdapter {
 		if(Gdx.input.isKeyPressed(Input.Keys.P)) leveledUp = false;
 
 		if(!leveledUp){
+			//Draw hero based on WASD on keyboard
+			batch.begin();
+			if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.W)) {
+				stateTime += Gdx.graphics.getDeltaTime();
+				TextureRegion currentState = mcNorthwest.getKeyFrame(stateTime, true);
+				batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			}else if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.S)) {
+				stateTime += Gdx.graphics.getDeltaTime();
+				TextureRegion currentState = mcSouthWest.getKeyFrame(stateTime, true);
+				batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			}else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.W)) {
+				stateTime += Gdx.graphics.getDeltaTime();
+				TextureRegion currentState = mcNortheast.getKeyFrame(stateTime, true);
+				batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			}else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.S)) {
+				stateTime += Gdx.graphics.getDeltaTime();
+				TextureRegion currentState = mcSoutheast.getKeyFrame(stateTime, true);
+				batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			}
+			else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+				stateTime += Gdx.graphics.getDeltaTime();
+				TextureRegion currentState = mcLeft.getKeyFrame(stateTime, true);
+				batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			}
+			else if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+				stateTime += Gdx.graphics.getDeltaTime();
+				TextureRegion currentState = mcRight.getKeyFrame(stateTime, true);
+				batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			}
+			else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+				stateTime += Gdx.graphics.getDeltaTime();
+				TextureRegion currentState = mcDown.getKeyFrame(stateTime, true);
+				batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			}
+			else if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+				stateTime += Gdx.graphics.getDeltaTime();
+				TextureRegion currentState = mcUp.getKeyFrame(stateTime, true);
+				batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			}else batch.draw(mcImage, hero.x, hero.y, 64, (float) (64 * 157) /120);
+			batch.end();
+
 			//Move Hero using WASD on keyboard
-			if (Gdx.input.isKeyPressed(Input.Keys.A)) hero.x -= 150 * Gdx.graphics.getDeltaTime();
-			if (Gdx.input.isKeyPressed(Input.Keys.D)) hero.x += 150 * Gdx.graphics.getDeltaTime();
-			if (Gdx.input.isKeyPressed(Input.Keys.S)) hero.y -= 150 * Gdx.graphics.getDeltaTime();
-			if (Gdx.input.isKeyPressed(Input.Keys.W)) hero.y += 150 * Gdx.graphics.getDeltaTime();
+			if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+				hero.x -= 150 * Gdx.graphics.getDeltaTime();
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+				hero.x += 150 * Gdx.graphics.getDeltaTime();
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+				hero.y -= 150 * Gdx.graphics.getDeltaTime();
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+				hero.y += 150 * Gdx.graphics.getDeltaTime();
+			}
 
 			//Interval time spawn monster
 			if (TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster();
@@ -250,8 +402,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	private void spawnHeroAtk() {
 		Rectangle heroAtk = new Rectangle();
-		heroAtk.x = hero.x;
-		heroAtk.y = hero.y;
+		heroAtk.x = hero.x + hero.width/2;
+		heroAtk.y = hero.y + hero.height/3;
 		heroAtk.width = 1;
 		heroAtk.height = 1;
 
@@ -267,15 +419,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		Rectangle xp = new Rectangle();
 		xp.width = 25;
 		xp.height = 25;
+		xp.x = _monsters.x+(float) monsImage.getWidth() /2;
+		xp.y = _monsters.y + (float) monsImage.getHeight() /2;
 		int randomize = MathUtils.random(0,2);
 		if(randomize == 0){
-			xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x+64/2, _monsters.y+64/2)));
+			xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
 		}
 		else if(randomize == 1) {
-			xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x+64/2, _monsters.y+64/2)));
+			xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
 		}
 		else if(randomize == 2){
-			xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x+64/2, _monsters.y+64/2)));
+			xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
 		}
 	}
 }
