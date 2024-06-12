@@ -26,8 +26,6 @@ public class Hero extends Entity implements  EntitiyAction{
             level++; //naikin lvlnya
             this.setXp(this.getXp()-maxXp); // buat Xp nya ulang dari 0 atau berapapun kalau ada sisanya
             this.maxXp += 100 * this.level;
-            //Change render state to leveledUp
-            MyGdxGame.leveledUp = true;
         }
     }
 
@@ -41,5 +39,9 @@ public class Hero extends Entity implements  EntitiyAction{
 
     public int getXp() {
         return xp;
+    }
+
+    public int getLevel() {
+        return level;
     }
 }

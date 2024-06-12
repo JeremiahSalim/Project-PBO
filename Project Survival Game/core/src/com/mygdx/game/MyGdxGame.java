@@ -17,6 +17,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,7 +27,7 @@ import java.util.Set;
 
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
-	Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank;
+	Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank, xpImage;
 	Sound killSound;
 	Music bgMusic;
 	OrthographicCamera camera;
@@ -43,6 +45,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	static boolean leveledUp = false;
 	Array<Pair<Rectangle, Xp>> xpArray;
 	Array<Pair<Rectangle, Monster>> monsArray;
+	private Viewport viewport;
 
 	@Override
 	public void create () {
@@ -57,6 +60,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		//make the bgImage repeated
 		bgImage.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 		blank = new Texture(Gdx.files.internal("bg/blank.jpeg"));
+		xpImage = new Texture(Gdx.files.internal("img/xp.png"));
 
 		//Generate music
 		bgMusic.setLooping(true);
@@ -65,6 +69,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		//Generate camera
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera);
 
 		//set hero rectangle position and size
 		hero = new Rectangle();
@@ -85,6 +90,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		screenWidth = Gdx.graphics.getWidth();
 	}
 
+	public void resize(int w, int h){
+		viewport.update(w,h);
+	}
+
 	@Override
 	public void render () {
 		ScreenUtils.clear(1, 0, 0, 1);
@@ -102,6 +111,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 		for(Pair<Rectangle, Bullet> bullet: bulletArray) {
 			batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
+		}
+		for(Pair<Rectangle, Xp> xp: xpArray) {
+			batch.draw(xpImage, xp.getKey().x, xp.getKey().y);
 		}
 		//Draw hp bar
 		batch.draw(blank,hero.getX()-camera.viewportWidth/2,hero.getY()-camera.viewportHeight/2,screenWidth * ((float) heroObject.getHp()/heroObject.getMaxHp()),5);
@@ -140,9 +152,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					if (timeSeconds > timeDelay) {
 						timeSeconds -= timeDelay;
 						heroObject.isAttacked(monster.getValue().getAtk());
-						System.out.println(heroObject.getHp());
 						if (!heroObject.isLive()) {
-							System.out.println("Game Over");
 						}
 					}
 				}
@@ -188,6 +198,15 @@ public class MyGdxGame extends ApplicationAdapter {
 					monsArray.removeValue(collision.getValue(), false);
 				}
 			}
+			for (Pair<Rectangle, Xp> exp: xpArray) {
+				if(hero.overlaps(exp.getKey())){
+					heroObject.calculateXp(exp.getValue().getAmount());
+					System.out.println(heroObject.getXp());
+					System.out.println(heroObject.getLevel());
+					xpArray.removeValue(exp,false);
+				}
+			}
+
 			//Interval time for hero to shoot magic bullet
 			if (TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
 
@@ -246,17 +265,17 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	private void spawnXp(Rectangle _monsters){
 		Rectangle xp = new Rectangle();
-		xp.width = 10;
-		xp.height = 10;
+		xp.width = 25;
+		xp.height = 25;
 		int randomize = MathUtils.random(0,2);
 		if(randomize == 0){
-			xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x, _monsters.y)));
+			xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x+64/2, _monsters.y+64/2)));
 		}
 		else if(randomize == 1) {
-			xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x, _monsters.y)));
+			xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x+64/2, _monsters.y+64/2)));
 		}
 		else if(randomize == 2){
-			xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x, _monsters.y)));
+			xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x+64/2, _monsters.y+64/2)));
 		}
 	}
 }
