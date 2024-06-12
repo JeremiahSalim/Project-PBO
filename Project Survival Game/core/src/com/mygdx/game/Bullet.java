@@ -3,7 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.math.Vector2;
 
 public class Bullet {
-    Vector2 bulletDirection = new Vector2();
+    Vector2 bulletDirection;
 
     public Bullet(Vector2 bulletDirection) {
         this.bulletDirection = bulletDirection;
