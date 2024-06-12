@@ -18,7 +18,9 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
@@ -148,36 +150,74 @@ public class MyGdxGame extends ApplicationAdapter {
 					}
 				}
 
-
-				//Interval time for hero to shoot magic bullet
-				if (TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
-				//bullet targeting
-				int bulletIndex = 0;
-				for (Iterator<Rectangle> bulletIter = heroAttacks.iterator(); bulletIter.hasNext(); ) {
-					Rectangle heroAtk = bulletIter.next();
-					Bullet bullet = bulletArray.get(bulletIndex);
-					heroAtk.x = heroAtk.x + bullet.getBulletDirection().x * 3;
-					System.out.println(heroAtk.x);
-					heroAtk.y = heroAtk.y + bullet.getBulletDirection().y * 3;
-					if (heroAtk.overlaps(monster)) {
-						monsterObject.isAttacked(heroObject.getAtk());
-						long id = killSound.play();
-						killSound.setVolume(id, 0.2f);
-						bulletIter.remove();
-						bulletArray.removeIndex(bulletIndex);
-						bulletIndex--;
-
-						//Monster dead
-						if (!monsterObject.isLive()) {
-							monsterIter.remove();
-							monsterObjects.removeIndex(monsIndex);
-							monsIndex--;
-						}
-					}
-					bulletIndex++;
-				}
-				monsIndex++;
+//				//Interval time for hero to shoot magic bullet
+//				if (TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
+//				//bullet targeting
+//				int bulletIndex = 0;
+//				for (Iterator<Rectangle> bulletIter = heroAttacks.iterator(); bulletIter.hasNext(); ) {
+//					Rectangle heroAtk = bulletIter.next();
+//					Bullet bullet = bulletArray.get(bulletIndex);
+//					heroAtk.x = heroAtk.x + bullet.getBulletDirection().x * 3;
+//					System.out.println(heroAtk.x);
+//					heroAtk.y = heroAtk.y + bullet.getBulletDirection().y * 3;
+//					if (heroAtk.overlaps(monster)) {
+//						monsterObject.isAttacked(heroObject.getAtk());
+//						long id = killSound.play();
+//						killSound.setVolume(id, 0.2f);
+//						bulletIter.remove();
+//						bulletArray.removeIndex(bulletIndex);
+//						bulletIndex--;
+//
+//						//Monster dead
+//						if (!monsterObject.isLive()) {
+//							monsterIter.remove();
+//							monsterObjects.removeIndex(monsIndex);
+//							monsIndex--;
+//						}
+//					}
+//					bulletIndex++;
+//				}
+//				monsIndex++;
 			}
+
+			for (Iterator<Rectangle> bulletIter = heroAttacks.iterator(); bulletIter.hasNext(); ) {
+				Rectangle heroAtk = bulletIter.next();
+				Bullet bullet = bulletArray.get(heroAttacks.indexOf(heroAtk, false));
+				heroAtk.x += bullet.getBulletDirection().x * 3;
+				heroAtk.y += bullet.getBulletDirection().y * 3;
+			}
+
+			// Check for collisions
+			Set<Pair<Rectangle, Rectangle>> collisions = new HashSet<>();
+			for (Rectangle heroAtk : heroAttacks) {
+				for (Rectangle monster : monsters) {
+					if (heroAtk.overlaps(monster)) {
+						collisions.add(new Pair<>(heroAtk, monster));
+					}
+				}
+			}
+
+			// Process collisions
+			for (Pair<Rectangle, Rectangle> collision : collisions) {
+				Rectangle heroAtk = collision.getKey();
+				Rectangle monster = collision.getValue();
+				Monster monsterObject = monsterObjects.get(monsters.indexOf(monster, false));
+				Bullet bullet = bulletArray.get(heroAttacks.indexOf(heroAtk, false));
+
+				monsterObject.isAttacked(heroObject.getAtk());
+				long id = killSound.play();
+				killSound.setVolume(id, 0.2f);
+				heroAttacks.removeValue(heroAtk, false);
+				bulletArray.removeValue(bullet, false);
+
+				if (!monsterObject.isLive()) {
+					monsters.removeValue(monster, false);
+					monsterObjects.removeValue(monsterObject, false);
+				}
+			}
+			//Interval time for hero to shoot magic bullet
+			if (TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
+
 		}
 		else {
 			//Do anything when leveledUp
@@ -227,10 +267,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(),0);
 		Vector2 heroPos = new Vector2(hero.getPosition(new Vector2()));
 		camera.unproject(touchPos);
-		Vector2 bulletDirection = new Vector2();
-		bulletDirection.x = (touchPos.x) - (heroPos.x + hero.width);
-		bulletDirection.y = (touchPos.y) - (heroPos.y + hero.height);
-		bulletArray.add(new Bullet(bulletDirection.nor()));
+		Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + hero.width), (touchPos.y) - (heroPos.y + hero.height));
+		bulletArray.add(new Bullet(bulletDirection));
 		lastAttackTime = TimeUtils.nanoTime();
 	}
 }
