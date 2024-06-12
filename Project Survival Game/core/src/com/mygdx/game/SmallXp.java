@@ -1,8 +1,8 @@
 package com.mygdx.game;
 
 public class SmallXp extends Xp implements Collectible{
-    public SmallXp() {
-        super(10);
+    public SmallXp(float x, float y) {
+        super(10, x, y);
     }
 
     @Override

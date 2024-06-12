@@ -7,6 +7,7 @@ public class Bullet {
 
     public Bullet(Vector2 bulletDirection) {
         this.bulletDirection = bulletDirection;
+        this.bulletDirection = bulletDirection.nor();
     }
 
     public Vector2 getBulletDirection() {
