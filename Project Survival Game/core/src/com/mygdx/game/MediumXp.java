@@ -1,7 +1,7 @@
 package com.mygdx.game;
 
 public class MediumXp extends Xp implements Collectible{
-    public MediumXp(int amount) {
+    public MediumXp() {
         super(25);
     }
 

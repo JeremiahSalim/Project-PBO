@@ -1,7 +1,7 @@
 package com.mygdx.game;
 
 public class SmallXp extends Xp implements Collectible{
-    public SmallXp(int amount) {
+    public SmallXp() {
         super(10);
     }
 
