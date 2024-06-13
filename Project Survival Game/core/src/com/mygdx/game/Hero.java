@@ -1,18 +1,22 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.math.Vector2;
+import java.util.ArrayList;
 
 public class Hero extends Entity implements  EntitiyAction{
     int maxHp;
     private int xp;
     int maxXp;
     private int level;
+    ArrayList<Skill> skills;
     public Hero() {
         super(1000, 100);
         maxHp = 1000;
         xp = 0;
         maxXp = 1000;
         level = 1;
+        skills = new ArrayList<Skill>(){{
+            add(new SkillRegenHP());
+        }};;
     }
 
     @Override
@@ -25,7 +29,7 @@ public class Hero extends Entity implements  EntitiyAction{
         if(this.getXp() >= this.maxXp){ //leveling up
             level++; //naikin lvlnya
             this.setXp(this.getXp()-maxXp); // buat Xp nya ulang dari 0 atau berapapun kalau ada sisanya
-            this.maxXp += 100 * this.level;
+            this.maxXp += 100 * this.level-1;
         }
     }
 
@@ -47,5 +51,25 @@ public class Hero extends Entity implements  EntitiyAction{
 
     public int getMaxXp() {
         return maxXp;
+    }
+
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
+    }
+
+    public void setMaxXp(int maxXp) {
+        this.maxXp = maxXp;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public ArrayList<Skill> getSkills() {
+        return skills;
+    }
+
+    public void setSkills(ArrayList<Skill> skills) {
+        this.skills = skills;
     }
 }

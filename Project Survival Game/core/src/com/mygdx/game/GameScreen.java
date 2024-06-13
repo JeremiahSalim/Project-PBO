@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -26,22 +27,20 @@ import java.util.Set;
 public class GameScreen implements Screen {
     MyGdxGame game;
     SpriteBatch batch;
-    Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank, xpImage, xpBar;
+    Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank, xpImage, xpBar, chestImage;
     Sound killSound;
     Music bgMusic;
     OrthographicCamera camera;
     Rectangle hero;
-    // Array<Rectangle> monsters;
-// Array<Rectangle> heroAttacks;
     private long lastSpawnTime;
     private long lastAttackTime;
-    // Array<Monster> monsterObjects;
     Array<Pair<Rectangle, Bullet>> bulletArray;
     Hero heroObject = new Hero();
     float timeDelay = 0.2f;
     float timeSeconds = 0f;
     static boolean leveledUp = false;
     Array<Pair<Rectangle, Xp>> xpArray;
+    Array<Pair<Rectangle, Chest>> chestArray;
     Array<Pair<Rectangle, Monster>> monsArray;
     private ScreenViewport viewport;
 
@@ -69,6 +68,7 @@ public class GameScreen implements Screen {
         blank = new Texture(Gdx.files.internal("bar/blank.jpeg"));
         xpImage = new Texture(Gdx.files.internal("hero/xp.png"));
         xpBar = new Texture(Gdx.files.internal("bar/xpBar.jpg"));
+        chestImage = new Texture(Gdx.files.internal("hero/chest.png"));
 
         //Generate music
         bgMusic.setLooping(true);
@@ -82,9 +82,9 @@ public class GameScreen implements Screen {
         //set hero rectangle position and size
         hero = new Rectangle();
         hero.width = 64;
-        hero.height = (float) (64 * 157) /120;
-        hero.x = Gdx.graphics.getWidth()/2 - hero.width/2;
-        hero.y = Gdx.graphics.getHeight()/2 - hero.height/2;
+        hero.height = (float) (64 * 157) / 120;
+        hero.x = Gdx.graphics.getWidth() / 2 - hero.width / 2;
+        hero.y = Gdx.graphics.getHeight() / 2 - hero.height / 2;
 
         //generate monster array rectangle and arrayobject
         monsArray = new Array<>();
@@ -95,9 +95,12 @@ public class GameScreen implements Screen {
         // generate xp array
         xpArray = new Array<>();
 
+        //generate chest Array
+        chestArray = new Array<>();
+
         //make mc animation North South
         Texture rawNS = new Texture("hero/N-S.png");
-        TextureRegion[][] NSframes = TextureRegion.split(rawNS, rawNS.getWidth()/11, rawNS.getHeight()/2);
+        TextureRegion[][] NSframes = TextureRegion.split(rawNS, rawNS.getWidth() / 11, rawNS.getHeight() / 2);
         TextureRegion[] north = new TextureRegion[9];
         TextureRegion[] south = new TextureRegion[10];
         int idx = 0;
@@ -119,7 +122,7 @@ public class GameScreen implements Screen {
 
         //make mc animation West East
         Texture rawWE = new Texture("hero/W-E.png");
-        TextureRegion[][] WEframes = TextureRegion.split(rawWE, rawWE.getWidth()/11, rawWE.getHeight()/2);
+        TextureRegion[][] WEframes = TextureRegion.split(rawWE, rawWE.getWidth() / 11, rawWE.getHeight() / 2);
         TextureRegion[] west = new TextureRegion[8];
         TextureRegion[] east = new TextureRegion[8];
         idx = 0;
@@ -141,7 +144,7 @@ public class GameScreen implements Screen {
 
         //make mc animation Southeast SouthWest
         Texture rawSWSE = new Texture("hero/SW-SE.png");
-        TextureRegion[][] SWSEframes = TextureRegion.split(rawSWSE, rawSWSE.getWidth()/11, rawSWSE.getHeight()/2);
+        TextureRegion[][] SWSEframes = TextureRegion.split(rawSWSE, rawSWSE.getWidth() / 11, rawSWSE.getHeight() / 2);
         TextureRegion[] southwest = new TextureRegion[8];
         TextureRegion[] southeast = new TextureRegion[8];
         idx = 0;
@@ -163,7 +166,7 @@ public class GameScreen implements Screen {
 
         //make mc animation Northwest, Northeast
         Texture rawNWNE = new Texture("hero/NW-NE.png");
-        TextureRegion[][] NWNEframes = TextureRegion.split(rawNWNE, rawNWNE.getWidth()/11, rawNWNE.getHeight()/2);
+        TextureRegion[][] NWNEframes = TextureRegion.split(rawNWNE, rawNWNE.getWidth() / 11, rawNWNE.getHeight() / 2);
         TextureRegion[] northwest = new TextureRegion[8];
         TextureRegion[] northeast = new TextureRegion[8];
         idx = 0;
@@ -194,74 +197,73 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         ScreenUtils.clear(1, 0, 0, 1);
-        camera.position.set(hero.x,hero.y,0);
+        camera.position.set(hero.x, hero.y, 0);
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         //generate repeated infinite background
-        batch.draw(bgImage, camera.position.x - camera.viewportWidth/2, camera.position.y - camera.viewportHeight/2, (int)hero.x-bgImage.getWidth(),bgImage.getHeight() - (int)hero.y, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.draw(bgImage, camera.position.x - camera.viewportWidth / 2, camera.position.y - camera.viewportHeight / 2, (int) hero.x - bgImage.getWidth(), bgImage.getHeight() - (int) hero.y, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 //  batch.draw(mcImage, hero.x, hero.y);
 
         //Draw image to each monster or heroAtk (bullet)
-        for(Pair<Rectangle, Monster> monster: monsArray) {
+        for (Pair<Rectangle, Monster> monster : monsArray) {
             batch.draw(monsImage, monster.getKey().x, monster.getKey().y);
         }
-        for(Pair<Rectangle, Bullet> bullet: bulletArray) {
+        for (Pair<Rectangle, Bullet> bullet : bulletArray) {
             batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
         }
-        for(Pair<Rectangle, Xp> xp: xpArray) {
+        for (Pair<Rectangle, Xp> xp : xpArray) {
             batch.draw(xpImage, xp.getKey().x, xp.getKey().y);
         }
+        for (Pair<Rectangle, Chest> chest : chestArray) {
+            batch.draw(chestImage, chest.getKey().x, chest.getKey().y);
+        }
         //Draw hp bar
-        batch.draw(blank,hero.getX()-camera.viewportWidth/2,hero.getY()-camera.viewportHeight/2, Gdx.graphics.getWidth() * ((float) heroObject.getHp()/heroObject.getMaxHp()),5);
+        batch.draw(blank, hero.getX() - camera.viewportWidth / 2, hero.getY() - camera.viewportHeight / 2, Gdx.graphics.getWidth() * ((float) heroObject.getHp() / heroObject.getMaxHp()), 5);
 
         //Draw xp Bar
-        batch.draw(xpBar,hero.getX()-camera.viewportWidth/2,hero.getY()+camera.viewportHeight/2-10, Gdx.graphics.getWidth() * ((float) heroObject.getXp()/heroObject.getMaxXp()),10);
+        batch.draw(xpBar, hero.getX() - camera.viewportWidth / 2, hero.getY() + camera.viewportHeight / 2 - 10, Gdx.graphics.getWidth() * ((float) heroObject.getXp() / heroObject.getMaxXp()), 10);
         batch.end();
 
-        if(Gdx.input.isTouched()) leveledUp = true;
-        if(Gdx.input.isKeyPressed(Input.Keys.P)) leveledUp = false;
+        if (Gdx.input.isTouched()) leveledUp = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.P)) leveledUp = false;
 
-        if(!leveledUp){
+        if (!leveledUp) {
             //Draw hero based on WASD on keyboard
             batch.begin();
             if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.W)) {
                 stateTime += Gdx.graphics.getDeltaTime();
                 TextureRegion currentState = mcNorthwest.getKeyFrame(stateTime, true);
-                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
-            }else if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.S)) {
+                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) / 120);
+            } else if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.S)) {
                 stateTime += Gdx.graphics.getDeltaTime();
                 TextureRegion currentState = mcSouthWest.getKeyFrame(stateTime, true);
-                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
-            }else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.W)) {
+                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) / 120);
+            } else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.W)) {
                 stateTime += Gdx.graphics.getDeltaTime();
                 TextureRegion currentState = mcNortheast.getKeyFrame(stateTime, true);
-                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
-            }else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.S)) {
+                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) / 120);
+            } else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.S)) {
                 stateTime += Gdx.graphics.getDeltaTime();
                 TextureRegion currentState = mcSoutheast.getKeyFrame(stateTime, true);
-                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
-            }
-            else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) / 120);
+            } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
                 stateTime += Gdx.graphics.getDeltaTime();
                 TextureRegion currentState = mcLeft.getKeyFrame(stateTime, true);
-                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
-            }
-            else if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) / 120);
+            } else if (Gdx.input.isKeyPressed(Input.Keys.D)) {
                 stateTime += Gdx.graphics.getDeltaTime();
                 TextureRegion currentState = mcRight.getKeyFrame(stateTime, true);
-                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
-            }
-            else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) / 120);
+            } else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
                 stateTime += Gdx.graphics.getDeltaTime();
                 TextureRegion currentState = mcDown.getKeyFrame(stateTime, true);
-                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
-            }
-            else if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) / 120);
+            } else if (Gdx.input.isKeyPressed(Input.Keys.W)) {
                 stateTime += Gdx.graphics.getDeltaTime();
                 TextureRegion currentState = mcUp.getKeyFrame(stateTime, true);
-                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) /120);
-            }else batch.draw(mcImage, hero.x, hero.y, 64, (float) (64 * 157) /120);
+                batch.draw(currentState, hero.x, hero.y, 64, (float) (64 * 157) / 120);
+            } else batch.draw(mcImage, hero.x, hero.y, 64, (float) (64 * 157) / 120);
             batch.end();
 
             //Move Hero using WASD on keyboard
@@ -320,6 +322,12 @@ public class GameScreen implements Screen {
                 exp.getKey().y = exp.getValue().getY();
             }
 
+            for (Iterator<Pair<Rectangle, Chest>> chestIter = chestArray.iterator(); chestIter.hasNext(); ) {
+                Pair<Rectangle, Chest> ch = chestIter.next();
+                ch.getKey().x = ch.getValue().getX();
+                ch.getKey().y = ch.getValue().getY();
+            }
+
             // Check for collisions
             Set<Pair<Pair<Rectangle, Bullet>, Pair<Rectangle, Monster>>> collisions = new HashSet<>();
             for (Pair<Rectangle, Bullet> bullet : bulletArray) {
@@ -347,27 +355,33 @@ public class GameScreen implements Screen {
                     monsArray.removeValue(collision.getValue(), false);
                 }
             }
-            for (Pair<Rectangle, Xp> exp: xpArray) {
-                if(hero.overlaps(exp.getKey())){
+            for (Pair<Rectangle, Xp> exp : xpArray) {
+                if (hero.overlaps(exp.getKey())) {
                     heroObject.calculateXp(exp.getValue().getAmount());
                     System.out.println(heroObject.getXp());
                     System.out.println(heroObject.getLevel());
-                    xpArray.removeValue(exp,false);
+                    xpArray.removeValue(exp, false);
+                }
+            }
+
+            for (Pair<Rectangle, Chest> ch : chestArray) {
+                if (hero.overlaps(ch.getKey())) {
+                    //Code goes here...
+                    chestArray.removeValue(ch, false);
                 }
             }
 
             //Interval time for hero to shoot magic bullet
             if (TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
 
-        }
-        else {
+        } else {
             //Do anything when leveledUp
         }
     }
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width,height);
+        viewport.update(width, height);
     }
 
     @Override
@@ -393,22 +407,19 @@ public class GameScreen implements Screen {
 
     private void spawnMonster() {
         Rectangle monster = new Rectangle();
-        int randomize = MathUtils.random(0,3);
-        if(randomize == 0){
-            monster.x = camera.position.x - camera.viewportWidth/2;
-            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight/2, camera.position.y + camera.viewportHeight/2);
-        }
-        else if(randomize == 1){
-            monster.x = camera.position.x + camera.viewportWidth/2;
-            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight/2, camera.position.y + camera.viewportHeight/2);
-        }
-        else if(randomize == 2){
-            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth/2, camera.position.x + camera.viewportWidth/2);
-            monster.y = camera.position.y - camera.viewportHeight/2;
-        }
-        else{
-            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth/2, camera.position.x + camera.viewportWidth/2);
-            monster.y = camera.position.y - camera.viewportHeight/2;
+        int randomize = MathUtils.random(0, 3);
+        if (randomize == 0) {
+            monster.x = camera.position.x - camera.viewportWidth / 2;
+            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
+        } else if (randomize == 1) {
+            monster.x = camera.position.x + camera.viewportWidth / 2;
+            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
+        } else if (randomize == 2) {
+            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
+            monster.y = camera.position.y - camera.viewportHeight / 2;
+        } else {
+            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
+            monster.y = camera.position.y - camera.viewportHeight / 2;
         }
         monster.width = 64;
         monster.height = 64;
@@ -419,34 +430,50 @@ public class GameScreen implements Screen {
 
     private void spawnHeroAtk() {
         Rectangle heroAtk = new Rectangle();
-        heroAtk.x = hero.x + hero.width/2;
-        heroAtk.y = hero.y + hero.height/3;
+        heroAtk.x = hero.x + hero.width / 2;
+        heroAtk.y = hero.y + hero.height / 3;
         heroAtk.width = 1;
         heroAtk.height = 1;
 
-        Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(),0);
+        Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         Vector2 heroPos = new Vector2(hero.getPosition(new Vector2()));
         camera.unproject(touchPos);
-        Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + hero.width/2), (touchPos.y) - (heroPos.y + hero.height/2));
+        Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + hero.width / 2), (touchPos.y) - (heroPos.y + hero.height / 2));
         bulletArray.add(new Pair<>(heroAtk, new Bullet(bulletDirection)));
         lastAttackTime = TimeUtils.nanoTime();
     }
 
-    private void spawnXp(Rectangle _monsters){
+    private void spawnXp(Rectangle _monsters) {
         Rectangle xp = new Rectangle();
         xp.width = 25;
         xp.height = 25;
-        xp.x = _monsters.x+(float) monsImage.getWidth() /2;
-        xp.y = _monsters.y + (float) monsImage.getHeight() /2;
-        int randomize = MathUtils.random(0,100);
-        if(randomize >= 0 && randomize <=49){
-            xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
+        xp.x = _monsters.x + (float) monsImage.getWidth() / 2;
+        xp.y = _monsters.y + (float) monsImage.getHeight() / 2;
+        int randomize = MathUtils.random(0, 100);
+        if (randomize >= 0 && randomize <= 49) {
+            xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
+        } else if (randomize >= 50 && randomize <= 79) {
+            xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
+        } else if (randomize >= 80 && randomize <= 98) {
+            xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
         }
-        else if(randomize >= 50 && randomize <=79) {
-            xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
+        else{
+            spawnChest(_monsters);
         }
-        else if(randomize >= 80 && randomize <=98){
-            xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
+    }
+
+    private void spawnChest(Rectangle _monsters) {
+        Rectangle chest = new Rectangle();
+        chest.width = 25;
+        chest.height = 25;
+        chest.x = _monsters.x + (float) monsImage.getWidth() / 2;
+        chest.y = _monsters.y + (float) monsImage.getHeight() / 2;
+        chestArray.add(new Pair<>(chest, new Chest(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
+    }
+
+    private void useSkill(){
+        for (Skill x: heroObject.getSkills()){
+            x.skillEffect(heroObject);
         }
     }
 }

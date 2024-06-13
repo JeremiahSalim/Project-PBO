@@ -8,7 +8,7 @@ public class SkillUpgradeATK extends Skill{
     }
 
     @Override
-    public float skillEffect(float amount) {
-        return (amount + (super.getValue()*amount));
+    public void skillEffect(Hero theHero) {
+        theHero.setAtk((int)(theHero.getAtk() + theHero.getAtk()*getValue()));
     }
 }

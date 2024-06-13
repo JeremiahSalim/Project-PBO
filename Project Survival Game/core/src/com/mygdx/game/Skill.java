@@ -1,6 +1,6 @@
 package com.mygdx.game;
 
-abstract class Skill {
+public class Skill {
     private String name;
     private String description;
     private float value; //this is used for anything
@@ -72,5 +72,11 @@ abstract class Skill {
         this.duration = duration;
     }
 
-    abstract float skillEffect(float amount);
+    public float skillEffect(float amount){
+        return 0;
+    }
+
+    public void skillEffect(Hero theHero){
+
+    }
 }
