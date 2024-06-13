@@ -26,19 +26,18 @@ import java.util.Set;
 public class GameScreen implements Screen {
     MyGdxGame game;
     SpriteBatch batch;
-    Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank, xpImage;
+    Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank, xpImage, xpBar;
     Sound killSound;
     Music bgMusic;
     OrthographicCamera camera;
     Rectangle hero;
-    //	Array<Rectangle> monsters;
-//	Array<Rectangle> heroAttacks;
+    // Array<Rectangle> monsters;
+// Array<Rectangle> heroAttacks;
     private long lastSpawnTime;
     private long lastAttackTime;
-    //	Array<Monster> monsterObjects;
+    // Array<Monster> monsterObjects;
     Array<Pair<Rectangle, Bullet>> bulletArray;
     Hero heroObject = new Hero();
-    int screenWidth;
     float timeDelay = 0.2f;
     float timeSeconds = 0f;
     static boolean leveledUp = false;
@@ -59,16 +58,17 @@ public class GameScreen implements Screen {
     public GameScreen(MyGdxGame game) {
         this.game = game;
         batch = new SpriteBatch();
-        monsImage = new Texture(Gdx.files.internal("img/mons.png"));
-        mcImage = new Texture(Gdx.files.internal("img/mc.png"));
+        monsImage = new Texture(Gdx.files.internal("monster/mons.png"));
+        mcImage = new Texture(Gdx.files.internal("hero/mc.png"));
         mcAtkImage = new Texture(Gdx.files.internal("hero/atk.png"));
         killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
         bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
         bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
         //make the bgImage repeated
         bgImage.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-        blank = new Texture(Gdx.files.internal("bg/blank.jpeg"));
-        xpImage = new Texture(Gdx.files.internal("img/xp.png"));
+        blank = new Texture(Gdx.files.internal("bar/blank.jpeg"));
+        xpImage = new Texture(Gdx.files.internal("hero/xp.png"));
+        xpBar = new Texture(Gdx.files.internal("bar/xpBar.jpg"));
 
         //Generate music
         bgMusic.setLooping(true);
@@ -95,10 +95,8 @@ public class GameScreen implements Screen {
         // generate xp array
         xpArray = new Array<>();
 
-        screenWidth = Gdx.graphics.getWidth();
-
         //make mc animation North South
-        Texture rawNS = new Texture("img/N-S.png");
+        Texture rawNS = new Texture("hero/N-S.png");
         TextureRegion[][] NSframes = TextureRegion.split(rawNS, rawNS.getWidth()/11, rawNS.getHeight()/2);
         TextureRegion[] north = new TextureRegion[9];
         TextureRegion[] south = new TextureRegion[10];
@@ -120,7 +118,7 @@ public class GameScreen implements Screen {
         mcDown = new Animation<>(.08f, south);
 
         //make mc animation West East
-        Texture rawWE = new Texture("img/W-E.png");
+        Texture rawWE = new Texture("hero/W-E.png");
         TextureRegion[][] WEframes = TextureRegion.split(rawWE, rawWE.getWidth()/11, rawWE.getHeight()/2);
         TextureRegion[] west = new TextureRegion[8];
         TextureRegion[] east = new TextureRegion[8];
@@ -142,7 +140,7 @@ public class GameScreen implements Screen {
         mcRight = new Animation<>(.08f, east);
 
         //make mc animation Southeast SouthWest
-        Texture rawSWSE = new Texture("img/SW-SE.png");
+        Texture rawSWSE = new Texture("hero/SW-SE.png");
         TextureRegion[][] SWSEframes = TextureRegion.split(rawSWSE, rawSWSE.getWidth()/11, rawSWSE.getHeight()/2);
         TextureRegion[] southwest = new TextureRegion[8];
         TextureRegion[] southeast = new TextureRegion[8];
@@ -164,7 +162,7 @@ public class GameScreen implements Screen {
         mcSoutheast = new Animation<>(.08f, southeast);
 
         //make mc animation Northwest, Northeast
-        Texture rawNWNE = new Texture("img/NW-NE.png");
+        Texture rawNWNE = new Texture("hero/NW-NE.png");
         TextureRegion[][] NWNEframes = TextureRegion.split(rawNWNE, rawNWNE.getWidth()/11, rawNWNE.getHeight()/2);
         TextureRegion[] northwest = new TextureRegion[8];
         TextureRegion[] northeast = new TextureRegion[8];
@@ -202,7 +200,7 @@ public class GameScreen implements Screen {
         batch.begin();
         //generate repeated infinite background
         batch.draw(bgImage, camera.position.x - camera.viewportWidth/2, camera.position.y - camera.viewportHeight/2, (int)hero.x-bgImage.getWidth(),bgImage.getHeight() - (int)hero.y, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-//		batch.draw(mcImage, hero.x, hero.y);
+//  batch.draw(mcImage, hero.x, hero.y);
 
         //Draw image to each monster or heroAtk (bullet)
         for(Pair<Rectangle, Monster> monster: monsArray) {
@@ -215,7 +213,10 @@ public class GameScreen implements Screen {
             batch.draw(xpImage, xp.getKey().x, xp.getKey().y);
         }
         //Draw hp bar
-        batch.draw(blank,hero.getX()-camera.viewportWidth/2,hero.getY()-camera.viewportHeight/2,screenWidth * ((float) heroObject.getHp()/heroObject.getMaxHp()),5);
+        batch.draw(blank,hero.getX()-camera.viewportWidth/2,hero.getY()-camera.viewportHeight/2, Gdx.graphics.getWidth() * ((float) heroObject.getHp()/heroObject.getMaxHp()),5);
+
+        //Draw xp Bar
+        batch.draw(xpBar,hero.getX()-camera.viewportWidth/2,hero.getY()+camera.viewportHeight/2-10, Gdx.graphics.getWidth() * ((float) heroObject.getXp()/heroObject.getMaxXp()),10);
         batch.end();
 
         if(Gdx.input.isTouched()) leveledUp = true;
@@ -437,14 +438,14 @@ public class GameScreen implements Screen {
         xp.height = 25;
         xp.x = _monsters.x+(float) monsImage.getWidth() /2;
         xp.y = _monsters.y + (float) monsImage.getHeight() /2;
-        int randomize = MathUtils.random(0,2);
-        if(randomize == 0){
+        int randomize = MathUtils.random(0,100);
+        if(randomize >= 0 && randomize <=49){
             xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
         }
-        else if(randomize == 1) {
+        else if(randomize >= 50 && randomize <=79) {
             xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
         }
-        else if(randomize == 2){
+        else if(randomize >= 80 && randomize <=98){
             xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x+(float) monsImage.getWidth() /2, _monsters.y+(float) monsImage.getHeight() /2)));
         }
     }

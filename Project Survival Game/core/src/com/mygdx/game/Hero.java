@@ -44,4 +44,8 @@ public class Hero extends Entity implements  EntitiyAction{
     public int getLevel() {
         return level;
     }
+
+    public int getMaxXp() {
+        return maxXp;
+    }
 }
