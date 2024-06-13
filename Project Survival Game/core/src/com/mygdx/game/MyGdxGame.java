@@ -410,7 +410,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(),0);
 		Vector2 heroPos = new Vector2(hero.getPosition(new Vector2()));
 		camera.unproject(touchPos);
-		Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + hero.width), (touchPos.y) - (heroPos.y + hero.height));
+		Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + hero.width/2), (touchPos.y) - (heroPos.y + hero.height/2));
 		bulletArray.add(new Pair<>(heroAtk, new Bullet(bulletDirection)));
 		lastAttackTime = TimeUtils.nanoTime();
 	}
