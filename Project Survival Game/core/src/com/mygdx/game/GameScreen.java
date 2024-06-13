@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class GameScreen implements Screen {
-
+    MyGdxGame game;
     SpriteBatch batch;
     Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank, xpImage;
     Sound killSound;
@@ -56,7 +56,8 @@ public class GameScreen implements Screen {
     private Animation<TextureRegion> mcSouthWest;
     private float stateTime;
 
-    public GameScreen() {
+    public GameScreen(MyGdxGame game) {
+        this.game = game;
         batch = new SpriteBatch();
         monsImage = new Texture(Gdx.files.internal("img/mons.png"));
         mcImage = new Texture(Gdx.files.internal("img/mc.png"));

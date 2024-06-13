@@ -33,8 +33,7 @@ public class MyGdxGame extends Game {
 
 	@Override
 	public void create () {
-		GameScreen gameScreen = new GameScreen();
-		setScreen(gameScreen);
+		setScreen(new MenuScreen(this));
 	}
 
 	public void resize(int w, int h){
