@@ -23,15 +23,13 @@ import java.util.Set;
 public class GameScreen implements Screen {
     MyGdxGame game;
     SpriteBatch batch;
-    Texture img, monsImage, mcImage, mcAtkImage, bgImage, blank, xpImage, xpBar, chestImage;
+    Texture img, monsImage, mcAtkImage, bgImage, blank, xpImage, xpBar, chestImage;
     Sound killSound;
     Music bgMusic;
     OrthographicCamera camera;
-//    Rectangle hero;
     private long lastSpawnTime;
     private long lastAttackTime;
     Array<Pair<Rectangle, Bullet>> bulletArray;
-//    Hero heroObject = new Hero();
     float timeDelay = 0.2f;
     float timeSeconds = 0f;
     float skillDelay = 0.25f;
@@ -51,7 +49,6 @@ public class GameScreen implements Screen {
         this.game = game;
         batch = new SpriteBatch();
         monsImage = new Texture(Gdx.files.internal("monster/mons.png"));
-        mcImage = new Texture(Gdx.files.internal("hero/mc.png"));
         mcAtkImage = new Texture(Gdx.files.internal("hero/atk.png"));
         killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
         bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
@@ -72,6 +69,7 @@ public class GameScreen implements Screen {
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         viewport = new ScreenViewport(camera);
 
+        //rectangle hero
         //set hero rectangle position and size
         mc = new Pair<>(new Rectangle(), new Hero());
         mc.getKey().width = 64;
@@ -174,7 +172,7 @@ public class GameScreen implements Screen {
         } else if (mcState.equals("Up")) {
             TextureRegion currentState = mc.getValue().getMcUp().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else batch.draw(mcImage, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else batch.draw(mc.getValue().getMcImage(), mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         batch.end();
 
         if (!leveledUp) {

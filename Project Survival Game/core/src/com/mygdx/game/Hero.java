@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -12,6 +13,7 @@ public class Hero extends Entity implements  EntitiyAction{
     private int maxXp;
     private int level;
     ArrayList<Skill> skills;
+    private Texture mcImage;
     private Animation<TextureRegion> mcUp;
     private Animation<TextureRegion> mcDown;
     private Animation<TextureRegion> mcLeft;
@@ -37,6 +39,8 @@ public class Hero extends Entity implements  EntitiyAction{
 
 
     public void create(){
+        mcImage = new Texture(Gdx.files.internal("hero/mc.png"));
+
         //make mc animation North South
         Texture rawNS = new Texture("hero/N-S.png");
         TextureRegion[][] NSframes = TextureRegion.split(rawNS, rawNS.getWidth() / 11, rawNS.getHeight() / 2);
@@ -263,5 +267,13 @@ public class Hero extends Entity implements  EntitiyAction{
 
     public void setMcState(String mcState) {
         this.mcState = mcState;
+    }
+
+    public Texture getMcImage() {
+        return mcImage;
+    }
+
+    public void setMcImage(Texture mcImage) {
+        this.mcImage = mcImage;
     }
 }
