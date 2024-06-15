@@ -1,34 +1,25 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
+
+import com.badlogic.gdx.math.Rectangle;
+
 public class Skill {
     private String name;
     private String description;
     private float value; //this is used for anything
-    private float cooldown;
-    private float duration;
-
-    public Skill(String name, String description, float value, float cooldown, float duration) {
-        this.name = name;
-        this.description = description;
-        this.value = value;
-        this.cooldown = cooldown;
-        this.duration = duration;
-    }
 
     public Skill(String name, String description, float value) {
         this.name = name;
         this.description = description;
         this.value = value;
-        this.cooldown = cooldown;
-        this.duration = duration;
     }
 
     public Skill() {
         this.name = name;
         this.description = description;
         this.value = value;
-        this.cooldown = cooldown;
-        this.duration = duration;
     }
 
     public String getName() {
@@ -55,23 +46,7 @@ public class Skill {
         this.value = value;
     }
 
-    public float getCooldown() {
-        return cooldown;
-    }
-
-    public void setCooldown(float cooldown) {
-        this.cooldown = cooldown;
-    }
-
-    public float getDuration() {
-        return duration;
-    }
-
-    public void setDuration(float duration) {
-        this.duration = duration;
-    }
-
-    public void skillEffect(Hero theHero){
+    public void skillEffect(Pair<Rectangle, Hero> mc, SpriteBatch batch){
 
     }
 }

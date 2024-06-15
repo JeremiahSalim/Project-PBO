@@ -1,5 +1,8 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
+
 public class SkillRegenHP extends Skill{
     public SkillRegenHP() {
         super.setName("Jett Heal Me Jett");
@@ -7,12 +10,12 @@ public class SkillRegenHP extends Skill{
         super.setValue(1);
     }
     @Override
-    public void skillEffect(Hero theHero) {
-        if(theHero.getHp() < theHero.getMaxHp()) {
-            theHero.setHp((int) (theHero.getHp() + getValue()));
+    public void skillEffect(Pair<Rectangle, Hero> mc, SpriteBatch batch) {
+        if(mc.getValue().getHp() < mc.getValue().getMaxHp()) {
+            mc.getValue().setHp((int) (mc.getValue().getHp() + getValue()));
         }
         else{
-            theHero.setHp(theHero.getMaxHp());
+            mc.getValue().setHp(mc.getValue().getMaxHp());
         }
     }
 }

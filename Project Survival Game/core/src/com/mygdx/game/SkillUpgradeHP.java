@@ -1,5 +1,8 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
+
 public class SkillUpgradeHP extends Skill{
     public SkillUpgradeHP(){
         super.setName("Gym Bro Pass");
@@ -7,7 +10,7 @@ public class SkillUpgradeHP extends Skill{
         super.setValue(0.2f);
     }
     @Override
-    public void skillEffect(Hero theHero) {
-        theHero.setMaxHp((int)(theHero.getMaxHp() + theHero.getMaxHp()*getValue()));
+    public void skillEffect(Pair<Rectangle, Hero> mc, SpriteBatch batch) {
+        mc.getValue().setMaxHp((int)(mc.getValue().getMaxHp() + mc.getValue().getMaxHp()*getValue()));
     }
 }

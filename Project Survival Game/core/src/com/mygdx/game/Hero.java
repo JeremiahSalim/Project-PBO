@@ -16,6 +16,7 @@ public class Hero extends Entity implements  EntitiyAction{
         level = 1;
         skills = new ArrayList<Skill>(){{
             add(new SkillRegenHP());
+            add(new SkillElectricField());
         }};;
     }
 

@@ -1,5 +1,8 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
+
 public class SkillUpgradeATK extends Skill{
     public SkillUpgradeATK() {
         super.setName("Training Camp");
@@ -8,7 +11,7 @@ public class SkillUpgradeATK extends Skill{
     }
 
     @Override
-    public void skillEffect(Hero theHero) {
-        theHero.setAtk((int)(theHero.getAtk() + theHero.getAtk()*getValue()));
+    public void skillEffect(Pair<Rectangle, Hero> mc, SpriteBatch batch) {
+        mc.getValue().setAtk((int)(mc.getValue().getAtk() + mc.getValue().getAtk()*getValue()));
     }
 }
