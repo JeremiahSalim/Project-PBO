@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class MenuScreen implements Screen {
     MyGdxGame game;
@@ -17,12 +18,17 @@ public class MenuScreen implements Screen {
     BitmapFont font;
     private Animation<TextureRegion> title;
     float stateTime;
+    Texture bgImage;
+    ScreenViewport viewport;
+    Texture subTitle;
 
 
     public MenuScreen(final MyGdxGame game){
+
         this.game = game;
         camera = new OrthographicCamera();
         camera.setToOrtho(false ,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        viewport = new ScreenViewport(camera);
         this.font = new BitmapFont();
         batch = new SpriteBatch();
         Texture rawTitle = new Texture("img/GameTitle.png");
@@ -35,6 +41,9 @@ public class MenuScreen implements Screen {
         }
         title = new Animation<>(.13f, titles);
         stateTime = 0f;
+        bgImage = new Texture("bg/start_bg.png");
+        subTitle = new Texture("img/subtitle.png");
+
     }
     @Override
     public void show() {
@@ -48,10 +57,11 @@ public class MenuScreen implements Screen {
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
+        batch.draw(bgImage,0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stateTime += Gdx.graphics.getDeltaTime();
         TextureRegion currentState = title.getKeyFrame(stateTime, true);
-        batch.draw(currentState, (float) Gdx.graphics.getWidth() /2 - (float) 563, (float) Gdx.graphics.getHeight() /2 - 44.3f, (float) 563*2, 44.3f*2);
-        font.draw(batch, "Tap anywhere to start", (float) Gdx.graphics.getWidth() /2, (float) Gdx.graphics.getHeight() /3 );
+        batch.draw(currentState, (float) Gdx.graphics.getWidth() /2 - (float) currentState.getRegionWidth()*0.75f, (float) Gdx.graphics.getHeight() /2 - currentState.getRegionHeight()*0.75f, (float) 563*1.5f, 44.3f*1.5f);
+        batch.draw(subTitle, (float) Gdx.graphics.getWidth() /2 -1097*0.2f , (float) Gdx.graphics.getHeight() /3 - 176*0.2f, 1097*0.4f, 176*0.4f);
         batch.end();
 
         if (Gdx.input.isTouched()) {
@@ -61,7 +71,7 @@ public class MenuScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-
+        camera.setToOrtho(false, width, height);
     }
 
     @Override
