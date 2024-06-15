@@ -14,12 +14,10 @@ public class SkillElectricField extends Skill{
     private Animation<TextureRegion> electricField;
     private float statetime;
 
-    private Texture coba;
-
     public SkillElectricField(){
         super.setName("Brrt Brrt");
         super.setDescription("Create Electric Field Around Player and Damage Monster per Second");
-        super.setValue(100);
+        super.setValue(25);
         create();
     }
 
@@ -49,9 +47,8 @@ public class SkillElectricField extends Skill{
 
     public void create(){
         area = new Circle();
-        area.radius = 200;
+
         Texture raw = new Texture("skill/electric.png");
-        coba = new Texture("skill/electric.png");
         TextureRegion[][] electricFrames = TextureRegion.split(raw, raw.getWidth() / 5, raw.getHeight());
         TextureRegion[] electric = new TextureRegion[5];
         int idx = 0;
@@ -61,6 +58,7 @@ public class SkillElectricField extends Skill{
                 idx++;
             }
         }
+        area.radius = 150;
 
         electricField = new Animation<>(0.1f, electric);
 
@@ -70,13 +68,14 @@ public class SkillElectricField extends Skill{
 
     @Override
     public void skillEffect(Pair<Rectangle, Hero> mc, SpriteBatch batch) {
-        area.x = mc.getKey().getX();
-        area.y = mc.getKey().getY();
+        area.x = mc.getKey().getX() + mc.getKey().getWidth()/2;
+        area.y = mc.getKey().getY() + mc.getKey().getHeight()/2;
+        System.out.println(area.x);
+        System.out.println(area.y);
         batch.begin();
         statetime += Gdx.graphics.getDeltaTime();
         TextureRegion currentState = electricField.getKeyFrame(statetime, true);
-        batch.draw(currentState,mc.getKey().x - area.radius + mc.getKey().getWidth()/2 , mc.getKey().y - area.radius + mc.getKey().getHeight()/2 , area.radius*2, area.radius*2);
-        System.out.println(statetime);
+        batch.draw(currentState,area.x - area.radius -50, area.y - area.radius - 50, area.radius*2 +100, area.radius*2 + 100);
         batch.end();
     }
 }

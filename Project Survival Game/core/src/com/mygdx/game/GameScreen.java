@@ -16,7 +16,6 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -35,7 +34,7 @@ public class GameScreen implements Screen {
 //    Hero heroObject = new Hero();
     float timeDelay = 0.2f;
     float timeSeconds = 0f;
-    float skillDelay = 1f;
+    float skillDelay = 0.25f;
     float skillSeconds = 0f;
     static boolean leveledUp = false;
     Array<Pair<Rectangle, Xp>> xpArray;
@@ -54,6 +53,7 @@ public class GameScreen implements Screen {
     private Animation<TextureRegion> mcSoutheast;
     private Animation<TextureRegion> mcSouthWest;
     private float stateTime;
+    private String mcState = "default";
 
 
 
@@ -86,7 +86,7 @@ public class GameScreen implements Screen {
         //set hero rectangle position and size
         mc = new Pair<>(new Rectangle(), new Hero());
         mc.getKey().width = 64;
-        mc.getKey().height = (float) (64 * 157) / 120;
+        mc.getKey().height = (mc.getKey().width * 157) / 120;
         mc.getKey().x = Gdx.graphics.getWidth() / 2 - mc.getKey().width / 2;
         mc.getKey().y = Gdx.graphics.getHeight() / 2 - mc.getKey().height / 2;
 
@@ -247,42 +247,63 @@ public class GameScreen implements Screen {
         if (Gdx.input.isTouched()) leveledUp = true;
         if (Gdx.input.isKeyPressed(Input.Keys.P)) leveledUp = false;
 
+        //Draw hero based on WASD on keyboard
+        batch.begin();
+        if (mcState.equals("NW")) {
+            TextureRegion currentState = mcNorthwest.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("SW")) {
+            TextureRegion currentState = mcSouthWest.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("NE")) {
+            TextureRegion currentState = mcNortheast.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("SE")) {
+            TextureRegion currentState = mcSoutheast.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("Left")) {
+            TextureRegion currentState = mcLeft.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("Right")) {
+            TextureRegion currentState = mcRight.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("Down")) {
+            TextureRegion currentState = mcDown.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("Up")) {
+            TextureRegion currentState = mcUp.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        } else batch.draw(mcImage, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+        batch.end();
+
         if (!leveledUp) {
             //Draw hero based on WASD on keyboard
             batch.begin();
             if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.W)) {
                 stateTime += Gdx.graphics.getDeltaTime();
-                TextureRegion currentState = mcNorthwest.getKeyFrame(stateTime, true);
-                batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+                mcState = "NW";
             } else if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.S)) {
                 stateTime += Gdx.graphics.getDeltaTime();
-                TextureRegion currentState = mcSouthWest.getKeyFrame(stateTime, true);
-                batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+                mcState = "SW";
             } else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.W)) {
                 stateTime += Gdx.graphics.getDeltaTime();
-                TextureRegion currentState = mcNortheast.getKeyFrame(stateTime, true);
-                batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+                mcState = "NE";
             } else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.S)) {
                 stateTime += Gdx.graphics.getDeltaTime();
-                TextureRegion currentState = mcSoutheast.getKeyFrame(stateTime, true);
-                batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+                mcState = "SE";
             } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
                 stateTime += Gdx.graphics.getDeltaTime();
-                TextureRegion currentState = mcLeft.getKeyFrame(stateTime, true);
-                batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+                mcState = "Left";
             } else if (Gdx.input.isKeyPressed(Input.Keys.D)) {
                 stateTime += Gdx.graphics.getDeltaTime();
-                TextureRegion currentState = mcRight.getKeyFrame(stateTime, true);
-                batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+                mcState = "Right";
             } else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
                 stateTime += Gdx.graphics.getDeltaTime();
-                TextureRegion currentState = mcDown.getKeyFrame(stateTime, true);
-                batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+                mcState = "Down";
             } else if (Gdx.input.isKeyPressed(Input.Keys.W)) {
                 stateTime += Gdx.graphics.getDeltaTime();
-                TextureRegion currentState = mcUp.getKeyFrame(stateTime, true);
-                batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-            } else batch.draw(mcImage, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
+                mcState = "Up";
+            } else mcState = "default";
             batch.end();
 
             //Move Hero using WASD on keyboard
@@ -299,8 +320,8 @@ public class GameScreen implements Screen {
                 mc.getKey().y += 150 * Gdx.graphics.getDeltaTime();
             }
 
-            //Interval time spawn monster
-            if (TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster();
+            //Interval time spawn monster 900000000
+            if (TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster(monsImage);
 
             for (Iterator<Pair<Rectangle, Monster>> monsterIter = monsArray.iterator(); monsterIter.hasNext(); ) {
                 Pair<Rectangle, Monster> monster = monsterIter.next();
@@ -312,9 +333,7 @@ public class GameScreen implements Screen {
                 direction.x = (heroPos.x + mc.getKey().width / 2) - (monsterPos.x + monster.getKey().width / 2);
                 direction.y = (heroPos.y + mc.getKey().height / 2) - (monsterPos.y + monster.getKey().height / 2);
                 direction.nor();
-                //speed of monster following hero
-                monster.getKey().x += direction.x * 1;
-                monster.getKey().y += direction.y * 1;
+
 
                 if (monster.getKey().overlaps(mc.getKey())) {
                     //delay the overlaps
@@ -324,24 +343,31 @@ public class GameScreen implements Screen {
                         mc.getValue().isAttacked(monster.getValue().getAtk());
                         if (!mc.getValue().isLive()) {
                         }
+
                     }
                 }
+
+                //check if electric field overlaps monster
                 int index = 0;
                 for (int i = 0; i < mc.getValue().getSkills().size(); i++) {
                     if (mc.getValue().getSkills().get(i) instanceof SkillElectricField) {
                         index = i;
                     }
                 }
-                if (Intersector.overlaps(((SkillElectricField)(mc.getValue().getSkills().get(index))).getArea(), monster.getKey()));{
-                    //delay the overlaps
-                    if (skillSeconds > skillDelay) {
+
+                skillSeconds += Gdx.graphics.getDeltaTime();
+                if (Intersector.overlaps(((SkillElectricField)(mc.getValue().getSkills().get(index))).getArea(), monster.getKey())){
+                    if (skillSeconds>skillDelay) {
                         monster.getValue().isAttacked((int) mc.getValue().getSkills().get(index).getValue());
                         if (!monster.getValue().isLive()) {
-                            spawnXp(monster.getKey());
+                            spawnCollectible(monster.getKey());
                             monsArray.removeValue(monster, false);
                         }
                     }
                 }
+                //speed of monster following hero
+                monster.getKey().x += direction.x * 1;
+                monster.getKey().y += direction.y * 1;
             }
 
             for (Iterator<Pair<Rectangle, Bullet>> bulletIter = bulletArray.iterator(); bulletIter.hasNext(); ) {
@@ -386,7 +412,7 @@ public class GameScreen implements Screen {
                 bulletArray.removeValue(collision.getKey(), false);
 
                 if (!monsterObject.isLive()) {
-                    spawnXp(monster);
+                    spawnCollectible(monster);
                     monsArray.removeValue(collision.getValue(), false);
                 }
             }
@@ -445,24 +471,24 @@ public class GameScreen implements Screen {
         img.dispose();
     }
 
-    private void spawnMonster() {
+    private void spawnMonster(Texture monsImage) {
         Rectangle monster = new Rectangle();
-        int randomize = MathUtils.random(0, 3);
+        monster.width = monsImage.getWidth();
+        monster.height = monsImage.getHeight();
+        int randomize = MathUtils.random(0, 4);
         if (randomize == 0) {
-            monster.x = camera.position.x - camera.viewportWidth / 2;
+            monster.x = camera.position.x - camera.viewportWidth / 2 - monster.width;
             monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
         } else if (randomize == 1) {
             monster.x = camera.position.x + camera.viewportWidth / 2;
             monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
         } else if (randomize == 2) {
             monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
-            monster.y = camera.position.y - camera.viewportHeight / 2;
+            monster.y = camera.position.y - camera.viewportHeight / 2 - monster.height;
         } else {
             monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
-            monster.y = camera.position.y - camera.viewportHeight / 2;
+            monster.y = camera.position.y + camera.viewportHeight / 2;
         }
-        monster.width = 64;
-        monster.height = 64;
 
         monsArray.add(new Pair<>(monster, new Monster()));
         lastSpawnTime = TimeUtils.nanoTime();
@@ -483,19 +509,19 @@ public class GameScreen implements Screen {
         lastAttackTime = TimeUtils.nanoTime();
     }
 
-    private void spawnXp(Rectangle _monsters) {
+    private void spawnCollectible(Rectangle _monsters) {
         Rectangle xp = new Rectangle();
         xp.width = 25;
         xp.height = 25;
-        xp.x = _monsters.x + (float) monsImage.getWidth() / 2;
-        xp.y = _monsters.y + (float) monsImage.getHeight() / 2;
+        xp.x = _monsters.x + _monsters.getWidth() / 2;
+        xp.y = _monsters.y + _monsters.getHeight() / 2;
         int randomize = MathUtils.random(0, 100);
         if (randomize >= 0 && randomize <= 49) {
-            xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
+            xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
         } else if (randomize >= 50 && randomize <= 79) {
-            xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
+            xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
         } else if (randomize >= 80 && randomize <= 98) {
-            xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
+            xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x +_monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
         }
         else{
             spawnChest(_monsters);
