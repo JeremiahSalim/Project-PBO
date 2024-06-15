@@ -44,17 +44,6 @@ public class GameScreen implements Screen {
     Pair<Rectangle, Hero> mc;
     private ScreenViewport viewport;
 
-    private Animation<TextureRegion> mcUp;
-    private Animation<TextureRegion> mcDown;
-    private Animation<TextureRegion> mcLeft;
-    private Animation<TextureRegion> mcRight;
-    private Animation<TextureRegion> mcNortheast;
-    private Animation<TextureRegion> mcNorthwest;
-    private Animation<TextureRegion> mcSoutheast;
-    private Animation<TextureRegion> mcSouthWest;
-    private float stateTime;
-    private String mcState = "default";
-
 
 
 
@@ -101,96 +90,6 @@ public class GameScreen implements Screen {
 
         //generate chest Array
         chestArray = new Array<>();
-
-        //make mc animation North South
-        Texture rawNS = new Texture("hero/N-S.png");
-        TextureRegion[][] NSframes = TextureRegion.split(rawNS, rawNS.getWidth() / 11, rawNS.getHeight() / 2);
-        TextureRegion[] north = new TextureRegion[9];
-        TextureRegion[] south = new TextureRegion[10];
-        int idx = 0;
-        for (int i = 0; i < 1; i++) {
-            for (int j = 0; j < 9; j++) {
-                north[idx] = NSframes[i][j];
-                idx++;
-            }
-        }
-        idx = 0;
-        for (int i = 1; i < 2; i++) {
-            for (int j = 0; j < 10; j++) {
-                south[idx] = NSframes[i][j];
-                idx++;
-            }
-        }
-        mcUp = new Animation<>(.08f, north);
-        mcDown = new Animation<>(.08f, south);
-
-        //make mc animation West East
-        Texture rawWE = new Texture("hero/W-E.png");
-        TextureRegion[][] WEframes = TextureRegion.split(rawWE, rawWE.getWidth() / 11, rawWE.getHeight() / 2);
-        TextureRegion[] west = new TextureRegion[8];
-        TextureRegion[] east = new TextureRegion[8];
-        idx = 0;
-        for (int i = 0; i < 1; i++) {
-            for (int j = 0; j < 8; j++) {
-                west[idx] = WEframes[i][j];
-                idx++;
-            }
-        }
-        idx = 0;
-        for (int i = 1; i < 2; i++) {
-            for (int j = 0; j < 8; j++) {
-                east[idx] = WEframes[i][j];
-                idx++;
-            }
-        }
-        mcLeft = new Animation<>(.08f, west);
-        mcRight = new Animation<>(.08f, east);
-
-        //make mc animation Southeast SouthWest
-        Texture rawSWSE = new Texture("hero/SW-SE.png");
-        TextureRegion[][] SWSEframes = TextureRegion.split(rawSWSE, rawSWSE.getWidth() / 11, rawSWSE.getHeight() / 2);
-        TextureRegion[] southwest = new TextureRegion[8];
-        TextureRegion[] southeast = new TextureRegion[8];
-        idx = 0;
-        for (int i = 0; i < 1; i++) {
-            for (int j = 0; j < 8; j++) {
-                southwest[idx] = SWSEframes[i][j];
-                idx++;
-            }
-        }
-        idx = 0;
-        for (int i = 1; i < 2; i++) {
-            for (int j = 0; j < 8; j++) {
-                southeast[idx] = SWSEframes[i][j];
-                idx++;
-            }
-        }
-        mcSouthWest = new Animation<>(.08f, southwest);
-        mcSoutheast = new Animation<>(.08f, southeast);
-
-        //make mc animation Northwest, Northeast
-        Texture rawNWNE = new Texture("hero/NW-NE.png");
-        TextureRegion[][] NWNEframes = TextureRegion.split(rawNWNE, rawNWNE.getWidth() / 11, rawNWNE.getHeight() / 2);
-        TextureRegion[] northwest = new TextureRegion[8];
-        TextureRegion[] northeast = new TextureRegion[8];
-        idx = 0;
-        for (int i = 0; i < 1; i++) {
-            for (int j = 0; j < 8; j++) {
-                northwest[idx] = NWNEframes[i][j];
-                idx++;
-            }
-        }
-        idx = 0;
-        for (int i = 1; i < 2; i++) {
-            for (int j = 0; j < 8; j++) {
-                northeast[idx] = NWNEframes[i][j];
-                idx++;
-            }
-        }
-        mcNorthwest = new Animation<>(.08f, northwest);
-        mcNortheast = new Animation<>(.08f, northeast);
-
-        stateTime = 0f;
     }
 
     @Override
@@ -248,30 +147,32 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyPressed(Input.Keys.P)) leveledUp = false;
 
         //Draw hero based on WASD on keyboard
+        float stateTime = mc.getValue().getStateTime();
+        String mcState = mc.getValue().getMcState();
         batch.begin();
         if (mcState.equals("NW")) {
-            TextureRegion currentState = mcNorthwest.getKeyFrame(stateTime, true);
+            TextureRegion currentState = mc.getValue().getMcNorthwest().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         } else if (mcState.equals("SW")) {
-            TextureRegion currentState = mcSouthWest.getKeyFrame(stateTime, true);
+            TextureRegion currentState = mc.getValue().getMcSouthWest().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         } else if (mcState.equals("NE")) {
-            TextureRegion currentState = mcNortheast.getKeyFrame(stateTime, true);
+            TextureRegion currentState = mc.getValue().getMcNortheast().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         } else if (mcState.equals("SE")) {
-            TextureRegion currentState = mcSoutheast.getKeyFrame(stateTime, true);
+            TextureRegion currentState = mc.getValue().getMcSoutheast().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         } else if (mcState.equals("Left")) {
-            TextureRegion currentState = mcLeft.getKeyFrame(stateTime, true);
+            TextureRegion currentState = mc.getValue().getMcLeft().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         } else if (mcState.equals("Right")) {
-            TextureRegion currentState = mcRight.getKeyFrame(stateTime, true);
+            TextureRegion currentState = mc.getValue().getMcRight().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         } else if (mcState.equals("Down")) {
-            TextureRegion currentState = mcDown.getKeyFrame(stateTime, true);
+            TextureRegion currentState = mc.getValue().getMcDown().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         } else if (mcState.equals("Up")) {
-            TextureRegion currentState = mcUp.getKeyFrame(stateTime, true);
+            TextureRegion currentState = mc.getValue().getMcUp().getKeyFrame(stateTime, true);
             batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         } else batch.draw(mcImage, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
         batch.end();
@@ -280,30 +181,30 @@ public class GameScreen implements Screen {
             //Draw hero based on WASD on keyboard
             batch.begin();
             if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.W)) {
-                stateTime += Gdx.graphics.getDeltaTime();
-                mcState = "NW";
+                mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
+                mc.getValue().setMcState("NW");
             } else if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.S)) {
-                stateTime += Gdx.graphics.getDeltaTime();
-                mcState = "SW";
+                mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
+                mc.getValue().setMcState("SW");
             } else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.W)) {
-                stateTime += Gdx.graphics.getDeltaTime();
-                mcState = "NE";
+                mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
+                mc.getValue().setMcState("NE");
             } else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.S)) {
-                stateTime += Gdx.graphics.getDeltaTime();
-                mcState = "SE";
+                mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
+                mc.getValue().setMcState("SE");
             } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-                stateTime += Gdx.graphics.getDeltaTime();
-                mcState = "Left";
+                mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
+                mc.getValue().setMcState("Left");
             } else if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-                stateTime += Gdx.graphics.getDeltaTime();
-                mcState = "Right";
+                mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
+                mc.getValue().setMcState("Right");
             } else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-                stateTime += Gdx.graphics.getDeltaTime();
-                mcState = "Down";
+                mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
+                mc.getValue().setMcState("Down");
             } else if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-                stateTime += Gdx.graphics.getDeltaTime();
-                mcState = "Up";
-            } else mcState = "default";
+                mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
+                mc.getValue().setMcState("Up");
+            } else mc.getValue().setMcState("default");
             batch.end();
 
             //Move Hero using WASD on keyboard
