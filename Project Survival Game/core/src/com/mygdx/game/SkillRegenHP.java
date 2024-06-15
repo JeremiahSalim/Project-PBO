@@ -8,6 +8,11 @@ public class SkillRegenHP extends Skill{
     }
     @Override
     public void skillEffect(Hero theHero) {
-        theHero.setHp((int)(theHero.getHp() + getValue()));
+        if(theHero.getHp() < theHero.getMaxHp()) {
+            theHero.setHp((int) (theHero.getHp() + getValue()));
+        }
+        else{
+            theHero.setHp(theHero.getMaxHp());
+        }
     }
 }

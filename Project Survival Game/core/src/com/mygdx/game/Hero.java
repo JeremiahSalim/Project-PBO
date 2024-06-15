@@ -3,9 +3,9 @@ package com.mygdx.game;
 import java.util.ArrayList;
 
 public class Hero extends Entity implements  EntitiyAction{
-    int maxHp;
+    private int maxHp;
     private int xp;
-    int maxXp;
+    private int maxXp;
     private int level;
     ArrayList<Skill> skills;
     public Hero() {
@@ -71,5 +71,9 @@ public class Hero extends Entity implements  EntitiyAction{
 
     public void setSkills(ArrayList<Skill> skills) {
         this.skills = skills;
+    }
+
+    public void addSkill(Skill _skill){
+        skills.add(_skill);
     }
 }

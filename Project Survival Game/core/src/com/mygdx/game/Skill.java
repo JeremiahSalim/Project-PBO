@@ -6,7 +6,6 @@ public class Skill {
     private float value; //this is used for anything
     private float cooldown;
     private float duration;
-    private boolean isActive = false;
 
     public Skill(String name, String description, float value, float cooldown, float duration) {
         this.name = name;
@@ -70,10 +69,6 @@ public class Skill {
 
     public void setDuration(float duration) {
         this.duration = duration;
-    }
-
-    public float skillEffect(float amount){
-        return 0;
     }
 
     public void skillEffect(Hero theHero){

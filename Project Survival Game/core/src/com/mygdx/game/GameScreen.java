@@ -38,6 +38,8 @@ public class GameScreen implements Screen {
     Hero heroObject = new Hero();
     float timeDelay = 0.2f;
     float timeSeconds = 0f;
+    float skillDelay = 1f;
+    float skillSeconds = 0f;
     static boolean leveledUp = false;
     Array<Pair<Rectangle, Xp>> xpArray;
     Array<Pair<Rectangle, Chest>> chestArray;
@@ -200,6 +202,13 @@ public class GameScreen implements Screen {
         camera.position.set(hero.x, hero.y, 0);
         camera.update();
         batch.setProjectionMatrix(camera.combined);
+
+        //Delay skill per 1 seconds
+        skillSeconds += Gdx.graphics.getDeltaTime();
+        if(skillSeconds > skillDelay){
+            skillSeconds -= skillDelay;
+            useSkill();
+        }
         batch.begin();
         //generate repeated infinite background
         batch.draw(bgImage, camera.position.x - camera.viewportWidth / 2, camera.position.y - camera.viewportHeight / 2, (int) hero.x - bgImage.getWidth(), bgImage.getHeight() - (int) hero.y, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -471,9 +480,12 @@ public class GameScreen implements Screen {
         chestArray.add(new Pair<>(chest, new Chest(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
     }
 
+    //Loop array skill that hero currently have
     private void useSkill(){
-        for (Skill x: heroObject.getSkills()){
-            x.skillEffect(heroObject);
+        ArrayList<Skill> skills= new ArrayList<Skill>();
+        skills = heroObject.getSkills();
+        for (Skill s : skills){
+            s.skillEffect(heroObject);
         }
     }
 }
