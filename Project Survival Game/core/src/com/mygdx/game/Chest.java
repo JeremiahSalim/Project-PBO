@@ -10,6 +10,7 @@ public class Chest {
         add(new SkillUpgradeHP());
         add(new SkillUpgradeATK());
         add(new SkillElectricField());
+        add(new SkillSpirit());
     }};
 
     public Chest(float x, float y) {

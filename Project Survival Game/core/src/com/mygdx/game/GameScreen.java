@@ -29,7 +29,9 @@ public class GameScreen implements Screen {
     OrthographicCamera camera;
     private long lastSpawnTime;
     private long lastAttackTime;
+    private long lastSpiritTime;
     Array<Pair<Rectangle, Bullet>> bulletArray;
+    Array<Pair<Rectangle, Bullet>> spiritBulletArray;
     float timeDelay = 0.2f;
     float timeSeconds = 0f;
     float skillDelay = 0.25f;
@@ -88,6 +90,9 @@ public class GameScreen implements Screen {
 
         //generate chest Array
         chestArray = new Array<>();
+
+        //generate spirit bullet array
+        spiritBulletArray = new Array<>();
     }
 
     @Override
@@ -111,7 +116,7 @@ public class GameScreen implements Screen {
         //Delay skill per 1 seconds
         skillSeconds += Gdx.graphics.getDeltaTime();
         for (Skill s : mc.getValue().getSkills()){
-            if (!(s instanceof SkillElectricField)){
+            if (!(s instanceof SkillElectricField || s instanceof SkillSpirit)){
                 if (skillSeconds>skillDelay){
                     useSkill(s);
                 }
@@ -124,6 +129,9 @@ public class GameScreen implements Screen {
             batch.draw(monsImage, monster.getKey().x, monster.getKey().y);
         }
         for (Pair<Rectangle, Bullet> bullet : bulletArray) {
+            batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
+        }
+        for (Pair<Rectangle, Bullet> bullet : spiritBulletArray) {
             batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
         }
         for (Pair<Rectangle, Xp> xp : xpArray) {
@@ -222,6 +230,10 @@ public class GameScreen implements Screen {
             //Interval time spawn monster 900000000
             if (TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster(monsImage);
 
+            float distance = 5000f;
+
+            Pair<Rectangle,Monster> monsterPair = new Pair<>();
+
             for (Iterator<Pair<Rectangle, Monster>> monsterIter = monsArray.iterator(); monsterIter.hasNext(); ) {
                 Pair<Rectangle, Monster> monster = monsterIter.next();
                 //Getting monster and hero position
@@ -229,10 +241,14 @@ public class GameScreen implements Screen {
                 Vector2 monsterPos = new Vector2(monster.getKey().getPosition(new Vector2()));
                 Vector2 heroPos = new Vector2(mc.getKey().getPosition(new Vector2()));
                 Vector2 direction = new Vector2();
+                float distance2 = Vector2.dst(heroPos.x,heroPos.y,monsterPos.x,monsterPos.y);
                 direction.x = (heroPos.x + mc.getKey().width / 2) - (monsterPos.x + monster.getKey().width / 2);
                 direction.y = (heroPos.y + mc.getKey().height / 2) - (monsterPos.y + monster.getKey().height / 2);
                 direction.nor();
-
+                if(distance2 < distance){
+                    distance = distance2;
+                    monsterPair = monster;
+                }
 
                 if (monster.getKey().overlaps(mc.getKey())) {
                     //delay the overlaps
@@ -242,7 +258,6 @@ public class GameScreen implements Screen {
                         mc.getValue().isAttacked(monster.getValue().getAtk());
                         if (!mc.getValue().isLive()) {
                         }
-
                     }
                 }
 
@@ -254,7 +269,6 @@ public class GameScreen implements Screen {
                     }
                 }
 
-                skillSeconds += Gdx.graphics.getDeltaTime();
                 if (Intersector.overlaps(((SkillElectricField)(mc.getValue().getSkills().get(index))).getArea(), monster.getKey())){
                     if (skillSeconds>skillDelay) {
                         monster.getValue().isAttacked((int) mc.getValue().getSkills().get(index).getValue());
@@ -269,26 +283,21 @@ public class GameScreen implements Screen {
                 monster.getKey().y += direction.y * 1;
             }
 
+            //Hero attack move logic
             for (Iterator<Pair<Rectangle, Bullet>> bulletIter = bulletArray.iterator(); bulletIter.hasNext(); ) {
                 Pair<Rectangle, Bullet> bullet = bulletIter.next();
                 bullet.getKey().x += bullet.getValue().getBulletDirection().x * 10;
                 bullet.getKey().y += bullet.getValue().getBulletDirection().y * 10;
             }
 
-
-            for (Iterator<Pair<Rectangle, Xp>> xpIter = xpArray.iterator(); xpIter.hasNext(); ) {
-                Pair<Rectangle, Xp> exp = xpIter.next();
-                exp.getKey().x = exp.getValue().getX();
-                exp.getKey().y = exp.getValue().getY();
+            //Spiritattack move logic
+            for (Iterator<Pair<Rectangle, Bullet>> bulletIter = spiritBulletArray.iterator(); bulletIter.hasNext(); ) {
+                Pair<Rectangle, Bullet> bullet = bulletIter.next();
+                bullet.getKey().x += bullet.getValue().getBulletDirection().x * 10;
+                bullet.getKey().y += bullet.getValue().getBulletDirection().y * 10;
             }
 
-            for (Iterator<Pair<Rectangle, Chest>> chestIter = chestArray.iterator(); chestIter.hasNext(); ) {
-                Pair<Rectangle, Chest> ch = chestIter.next();
-                ch.getKey().x = ch.getValue().getX();
-                ch.getKey().y = ch.getValue().getY();
-            }
-
-            // Check for collisions
+            // Check for collisions between monster and heroatk
             Set<Pair<Pair<Rectangle, Bullet>, Pair<Rectangle, Monster>>> collisions = new HashSet<>();
             for (Pair<Rectangle, Bullet> bullet : bulletArray) {
                 for (Pair<Rectangle, Monster> monster : monsArray) {
@@ -298,7 +307,7 @@ public class GameScreen implements Screen {
                 }
             }
 
-            // Process collisions
+            // Process collisions between monster and heroatk
             for (Pair<Pair<Rectangle, Bullet>, Pair<Rectangle, Monster>> collision : collisions) {
                 Rectangle bullet = collision.getKey().getKey();
                 Rectangle monster = collision.getValue().getKey();
@@ -315,15 +324,50 @@ public class GameScreen implements Screen {
                     monsArray.removeValue(collision.getValue(), false);
                 }
             }
+
+            // Check for collisions between monster and spiritAtk
+            Set<Pair<Pair<Rectangle, Bullet>, Pair<Rectangle, Monster>>> spiritCollisions = new HashSet<>();
+            for (Pair<Rectangle, Bullet> bullet : spiritBulletArray) {
+                for (Pair<Rectangle, Monster> monster : monsArray) {
+                    if (bullet.getKey().overlaps(monster.getKey())) {
+                        spiritCollisions.add(new Pair<>(bullet, monster));
+                    }
+                }
+            }
+
+            // Process collisions between monster and spiritAtk
+            for (Pair<Pair<Rectangle, Bullet>, Pair<Rectangle, Monster>> collision : spiritCollisions) {
+                Rectangle monster = collision.getValue().getKey();
+                Monster monsterObject = collision.getValue().getValue();
+                Skill skillSpirit = new Skill();
+                for (Skill s: mc.getValue().getSkills()){
+                    if(s instanceof SkillSpirit){
+                        skillSpirit = s;
+                    }
+                }
+
+                monsterObject.isAttacked((int)skillSpirit.getValue());
+                long id = killSound.play();
+                killSound.setVolume(id, 0.2f);
+                spiritBulletArray.removeValue(collision.getKey(), false);
+
+                if (!monsterObject.isLive()) {
+                    spawnCollectible(monster);
+                    monsArray.removeValue(collision.getValue(), false);
+                }
+            }
+
+            //collision between hero and xp
             for (Pair<Rectangle, Xp> exp : xpArray) {
                 if (mc.getKey().overlaps(exp.getKey())) {
                     mc.getValue().calculateXp(exp.getValue().getAmount());
-                    System.out.println(mc.getValue().getXp());
-                    System.out.println(mc.getValue().getLevel());
+//                    System.out.println(mc.getValue().getXp());
+//                    System.out.println(mc.getValue().getLevel());
                     xpArray.removeValue(exp, false);
                 }
             }
 
+            //collision between hero and chest
             for (Pair<Rectangle, Chest> ch : chestArray) {
                 if (mc.getKey().overlaps(ch.getKey())) {
                     //Code goes here...
@@ -333,6 +377,9 @@ public class GameScreen implements Screen {
 
             //Interval time for hero to shoot magic bullet
             if (TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
+
+            //Interval time for spirit to attack
+            if (TimeUtils.nanoTime() - lastSpiritTime > 900000000) spawnSpiritAtk(monsterPair);
 
             //Refresh skillseconds
             if (skillSeconds>skillDelay){
@@ -406,6 +453,22 @@ public class GameScreen implements Screen {
         Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + mc.getKey().width / 2), (touchPos.y) - (heroPos.y + mc.getKey().height / 2));
         bulletArray.add(new Pair<>(heroAtk, new Bullet(bulletDirection)));
         lastAttackTime = TimeUtils.nanoTime();
+    }
+
+    private void spawnSpiritAtk(Pair<Rectangle,Monster> monster) {
+        Rectangle spiritAtk = new Rectangle();
+        spiritAtk.x = mc.getKey().getX() - 60;
+        spiritAtk.y = mc.getKey().getY() + 60;
+        spiritAtk.width = 1;
+        spiritAtk.height = 1;
+
+        Vector2 monsPos = new Vector2(monster.getKey().getPosition(new Vector2()));
+        Vector2 spiritPos = new Vector2(mc.getKey().getPosition(new Vector2()));
+        spiritPos.x -= 60;
+        spiritPos.y += 60;
+        Vector2 bulletDirection = new Vector2((monsPos .x + monster.getKey().width/2) - (spiritPos.x ), (monsPos .y+ monster.getKey().width/2) - (spiritPos.y ));
+        spiritBulletArray.add(new Pair<>(spiritAtk, new Bullet(bulletDirection)));
+        lastSpiritTime = TimeUtils.nanoTime();
     }
 
     private void spawnCollectible(Rectangle _monsters) {
