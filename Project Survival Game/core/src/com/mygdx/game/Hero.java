@@ -1,9 +1,14 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+import org.w3c.dom.css.Rect;
+import sun.jvm.hotspot.debugger.win32.coff.ExportDirectoryTable;
 
 import java.util.ArrayList;
 
@@ -14,14 +19,7 @@ public class Hero extends Entity implements  EntitiyAction{
     private int level;
     ArrayList<Skill> skills;
     private Texture mcImage;
-    private Animation<TextureRegion> mcUp;
-    private Animation<TextureRegion> mcDown;
-    private Animation<TextureRegion> mcLeft;
-    private Animation<TextureRegion> mcRight;
-    private Animation<TextureRegion> mcNortheast;
-    private Animation<TextureRegion> mcNorthwest;
-    private Animation<TextureRegion> mcSoutheast;
-    private Animation<TextureRegion> mcSouthWest;
+    private Animation<TextureRegion> mcUp, mcDown, mcLeft, mcRight, mcNortheast, mcNorthwest, mcSoutheast, mcSouthWest;
     private float stateTime;
     private String mcState = "default";
     public Hero() {
@@ -276,5 +274,52 @@ public class Hero extends Entity implements  EntitiyAction{
 
     public void setMcImage(Texture mcImage) {
         this.mcImage = mcImage;
+    }
+
+    public void drawMove(SpriteBatch batch, Rectangle mcRectangle){
+        //Draw Hero based on mcState
+        batch.begin();
+        if (mcState.equals("NW")) {
+            TextureRegion currentState = mcNorthwest.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("SW")) {
+            TextureRegion currentState = mcSouthWest.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("NE")) {
+            TextureRegion currentState = mcNortheast.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("SE")) {
+            TextureRegion currentState = mcSoutheast.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("Left")) {
+            TextureRegion currentState = mcLeft.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("Right")) {
+            TextureRegion currentState = mcRight.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("Down")) {
+            TextureRegion currentState = mcDown.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        } else if (mcState.equals("Up")) {
+            TextureRegion currentState = mcUp.getKeyFrame(stateTime, true);
+            batch.draw(currentState, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        } else batch.draw(this.mcImage, mcRectangle.x, mcRectangle.y, 64, (float) (64 * 157) / 120);
+        batch.end();
+    }
+
+    public void move(Rectangle mcRectangle){
+        //Move Hero using WASD on keyboard
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+            mcRectangle.x -= 150 * Gdx.graphics.getDeltaTime();
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+            mcRectangle.x += 150 * Gdx.graphics.getDeltaTime();
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+            mcRectangle.y -= 150 * Gdx.graphics.getDeltaTime();
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+            mcRectangle.y += 150 * Gdx.graphics.getDeltaTime();
+        }
     }
 }

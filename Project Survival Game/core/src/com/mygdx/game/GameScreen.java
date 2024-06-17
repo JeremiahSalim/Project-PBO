@@ -23,7 +23,8 @@ import java.util.Set;
 public class GameScreen implements Screen {
     MyGdxGame game;
     SpriteBatch batch;
-    Texture img, monsImage, mcAtkImage, bgImage, blank, xpImage, xpBar, chestImage;
+    Texture img, monsImage, spiritAtkImage, bgImage, blank, xpImage, xpBar, chestImage;
+
     Sound killSound;
     Music bgMusic;
     OrthographicCamera camera;
@@ -44,6 +45,15 @@ public class GameScreen implements Screen {
     Pair<Rectangle, Hero> mc;
     private ScreenViewport viewport;
 
+    private Animation<TextureRegion> mcAtk;
+
+    private float atkTime = 0f;
+    private float atkDelay = 0.9f;
+    private float spiritAtkTime = 0f;
+    private float spiritAtkDelay = 0.9f;
+    private float spawnTime = 0f;
+    private float spawnDelay = 0.9f;
+
 
 
 
@@ -51,7 +61,21 @@ public class GameScreen implements Screen {
         this.game = game;
         batch = new SpriteBatch();
         monsImage = new Texture(Gdx.files.internal("monster/mons.png"));
-        mcAtkImage = new Texture(Gdx.files.internal("hero/atk.png"));
+
+        spiritAtkImage = new Texture(Gdx.files.internal("hero/atk.png"));
+
+        Texture rawAtk = new Texture(Gdx.files.internal("hero/basicAtk.png"));
+        TextureRegion[][] BAFrames = TextureRegion.split(rawAtk, rawAtk.getWidth()/6, rawAtk.getHeight());
+        TextureRegion[] basicAtk = new TextureRegion[6];
+        int idx = 0;
+        for (int i = 0; i < 1; i++) {
+            for (int j = 0; j < 6; j++) {
+                basicAtk[idx] = BAFrames[i][j];
+                idx++;
+            }
+        }
+        mcAtk = new Animation<>(0.1f, basicAtk);
+
         killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
         bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
         bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
@@ -93,6 +117,7 @@ public class GameScreen implements Screen {
 
         //generate spirit bullet array
         spiritBulletArray = new Array<>();
+        spawnMonster(monsImage);
     }
 
     @Override
@@ -110,7 +135,6 @@ public class GameScreen implements Screen {
         batch.begin();
         //generate repeated infinite background
         batch.draw(bgImage, camera.position.x - camera.viewportWidth / 2, camera.position.y - camera.viewportHeight / 2, (int) mc.getKey().x - bgImage.getWidth(), bgImage.getHeight() - (int) mc.getKey().y, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-//  batch.draw(mcImage, hero.x, hero.y);
         batch.end();
 
         //Delay skill per 1 seconds
@@ -129,10 +153,13 @@ public class GameScreen implements Screen {
             batch.draw(monsImage, monster.getKey().x, monster.getKey().y);
         }
         for (Pair<Rectangle, Bullet> bullet : bulletArray) {
-            batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
+            bullet.getValue().setStateTime(bullet.getValue().getStateTime() + Gdx.graphics.getDeltaTime());
+            TextureRegion currentState = mcAtk.getKeyFrame(bullet.getValue().getStateTime(), true);
+            batch.draw(currentState, bullet.getKey().x, bullet.getKey().y, 25, 25);
+            //batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
         }
         for (Pair<Rectangle, Bullet> bullet : spiritBulletArray) {
-            batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
+            batch.draw(spiritAtkImage, bullet.getKey().x, bullet.getKey().y);
         }
         for (Pair<Rectangle, Xp> xp : xpArray) {
             batch.draw(xpImage, xp.getKey().x, xp.getKey().y);
@@ -152,39 +179,14 @@ public class GameScreen implements Screen {
         if (Gdx.input.isTouched()) leveledUp = true;
         if (Gdx.input.isKeyPressed(Input.Keys.P)) leveledUp = false;
 
-        //Draw hero based on WASD on keyboard
-        float stateTime = mc.getValue().getStateTime();
-        String mcState = mc.getValue().getMcState();
-        batch.begin();
-        if (mcState.equals("NW")) {
-            TextureRegion currentState = mc.getValue().getMcNorthwest().getKeyFrame(stateTime, true);
-            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else if (mcState.equals("SW")) {
-            TextureRegion currentState = mc.getValue().getMcSouthWest().getKeyFrame(stateTime, true);
-            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else if (mcState.equals("NE")) {
-            TextureRegion currentState = mc.getValue().getMcNortheast().getKeyFrame(stateTime, true);
-            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else if (mcState.equals("SE")) {
-            TextureRegion currentState = mc.getValue().getMcSoutheast().getKeyFrame(stateTime, true);
-            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else if (mcState.equals("Left")) {
-            TextureRegion currentState = mc.getValue().getMcLeft().getKeyFrame(stateTime, true);
-            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else if (mcState.equals("Right")) {
-            TextureRegion currentState = mc.getValue().getMcRight().getKeyFrame(stateTime, true);
-            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else if (mcState.equals("Down")) {
-            TextureRegion currentState = mc.getValue().getMcDown().getKeyFrame(stateTime, true);
-            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else if (mcState.equals("Up")) {
-            TextureRegion currentState = mc.getValue().getMcUp().getKeyFrame(stateTime, true);
-            batch.draw(currentState, mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        } else batch.draw(mc.getValue().getMcImage(), mc.getKey().x, mc.getKey().y, 64, (float) (64 * 157) / 120);
-        batch.end();
+        //Draw Hero based on mcState
+        mc.getValue().drawMove(batch, mc.getKey());
 
         if (!leveledUp) {
-            //Draw hero based on WASD on keyboard
+            spawnTime += Gdx.graphics.getDeltaTime();
+            atkTime += Gdx.graphics.getDeltaTime();
+            spiritAtkTime += Gdx.graphics.getDeltaTime();
+            //Change hero moveState based on KeyPressed
             batch.begin();
             if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.W)) {
                 mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
@@ -213,22 +215,9 @@ public class GameScreen implements Screen {
             } else mc.getValue().setMcState("default");
             batch.end();
 
-            //Move Hero using WASD on keyboard
-            if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-                mc.getKey().x -= 150 * Gdx.graphics.getDeltaTime();
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-                mc.getKey().x += 150 * Gdx.graphics.getDeltaTime();
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-                mc.getKey().y -= 150 * Gdx.graphics.getDeltaTime();
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-                mc.getKey().y += 150 * Gdx.graphics.getDeltaTime();
-            }
+            //Move the mc
+            mc.getValue().move(mc.getKey());
 
-            //Interval time spawn monster 900000000
-            if (TimeUtils.nanoTime() - lastSpawnTime > 900000000) spawnMonster(monsImage);
 
             float distance = 5000f;
 
@@ -268,11 +257,12 @@ public class GameScreen implements Screen {
                         index = i;
                     }
                 }
-
                 if (Intersector.overlaps(((SkillElectricField)(mc.getValue().getSkills().get(index))).getArea(), monster.getKey())){
                     if (skillSeconds>skillDelay) {
                         monster.getValue().isAttacked((int) mc.getValue().getSkills().get(index).getValue());
                         if (!monster.getValue().isLive()) {
+                            long id = killSound.play();
+                            killSound.setVolume(id, 0.1f);
                             spawnCollectible(monster.getKey());
                             monsArray.removeValue(monster, false);
                         }
@@ -315,11 +305,11 @@ public class GameScreen implements Screen {
                 Bullet bulletObject = collision.getKey().getValue();
 
                 monsterObject.isAttacked(mc.getValue().getAtk());
-                long id = killSound.play();
-                killSound.setVolume(id, 0.2f);
                 bulletArray.removeValue(collision.getKey(), false);
 
                 if (!monsterObject.isLive()) {
+                    long id = killSound.play();
+                    killSound.setVolume(id, 0.1f);
                     spawnCollectible(monster);
                     monsArray.removeValue(collision.getValue(), false);
                 }
@@ -347,11 +337,11 @@ public class GameScreen implements Screen {
                 }
 
                 monsterObject.isAttacked((int)skillSpirit.getValue());
-                long id = killSound.play();
-                killSound.setVolume(id, 0.2f);
                 spiritBulletArray.removeValue(collision.getKey(), false);
 
                 if (!monsterObject.isLive()) {
+                    long id = killSound.play();
+                    killSound.setVolume(id, 0.1f);
                     spawnCollectible(monster);
                     monsArray.removeValue(collision.getValue(), false);
                 }
@@ -376,10 +366,21 @@ public class GameScreen implements Screen {
             }
 
             //Interval time for hero to shoot magic bullet
-            if (TimeUtils.nanoTime() - lastAttackTime > 900000000) spawnHeroAtk();
+            if (atkTime > atkDelay) {
+                spawnHeroAtk();
+                atkTime -= atkDelay;
+            }
 
-            //Interval time for spirit to attack
-            if (TimeUtils.nanoTime() - lastSpiritTime > 900000000) spawnSpiritAtk(monsterPair);
+            //Interval time spawn monster 900000000
+            if (spawnTime > spawnDelay) {
+                spawnMonster(monsImage);
+                spawnTime -= spawnDelay;
+            }
+
+            if (spiritAtkTime > spiritAtkDelay) {
+                spawnSpiritAtk(monsterPair);
+                spiritAtkTime -= spiritAtkDelay;
+            }
 
             //Refresh skillseconds
             if (skillSeconds>skillDelay){
@@ -437,7 +438,7 @@ public class GameScreen implements Screen {
         }
 
         monsArray.add(new Pair<>(monster, new Monster()));
-        lastSpawnTime = TimeUtils.nanoTime();
+        //lastSpawnTime = TimeUtils.nanoTime();
     }
 
     private void spawnHeroAtk() {
@@ -452,7 +453,7 @@ public class GameScreen implements Screen {
         camera.unproject(touchPos);
         Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + mc.getKey().width / 2), (touchPos.y) - (heroPos.y + mc.getKey().height / 2));
         bulletArray.add(new Pair<>(heroAtk, new Bullet(bulletDirection)));
-        lastAttackTime = TimeUtils.nanoTime();
+        //lastAttackTime = TimeUtils.nanoTime();
     }
 
     private void spawnSpiritAtk(Pair<Rectangle,Monster> monster) {
@@ -468,7 +469,7 @@ public class GameScreen implements Screen {
         spiritPos.y += 60;
         Vector2 bulletDirection = new Vector2((monsPos .x + monster.getKey().width/2) - (spiritPos.x ), (monsPos .y+ monster.getKey().width/2) - (spiritPos.y ));
         spiritBulletArray.add(new Pair<>(spiritAtk, new Bullet(bulletDirection)));
-        lastSpiritTime = TimeUtils.nanoTime();
+        //lastSpiritTime = TimeUtils.nanoTime();
     }
 
     private void spawnCollectible(Rectangle _monsters) {
