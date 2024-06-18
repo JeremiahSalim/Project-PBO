@@ -38,11 +38,11 @@ public class GameScreen implements Screen {
     float skillDelay = 0.25f;
     float skillSeconds = 0f;
     static boolean leveledUp = false;
-    Array<Pair<Rectangle, Xp>> xpArray;
-    Array<Pair<Rectangle, Chest>> chestArray;
-    Array<Pair<Rectangle, Monster>> monsArray;
+    private Array<Pair<Rectangle, Xp>> xpArray;
+    private Array<Pair<Rectangle, Chest>> chestArray;
+    private Array<Pair<Rectangle, Monster>> monsArray;
 
-    Pair<Rectangle, Hero> mc;
+    private Pair<Rectangle, Hero> mc;
     private ScreenViewport viewport;
 
     private Animation<TextureRegion> mcAtk;
@@ -147,23 +147,36 @@ public class GameScreen implements Screen {
             }else useSkill(s);
         }
 
+
         batch.begin();
-        //Draw image to each monster or heroAtk (bullet)
+        //Draw image to each monster
         for (Pair<Rectangle, Monster> monster : monsArray) {
-            batch.draw(monsImage, monster.getKey().x, monster.getKey().y);
+            if (mc.getKey().x + mc.getKey().width/2 > monster.getKey().x) {
+                TextureRegion currentState = monster.getValue().getMonsAnimRight().getKeyFrame(monster.getValue().getStateTime(), true);
+                batch.draw(currentState, monster.getKey().x, monster.getKey().y, 64, 64);
+            }else{
+                TextureRegion currentState = monster.getValue().getMonsAnimLeft().getKeyFrame(monster.getValue().getStateTime(), true);
+                batch.draw(currentState, monster.getKey().x, monster.getKey().y, 64, 64);
+            }
+
         }
+
+        //Draw image to each heroAtk (bullet)
         for (Pair<Rectangle, Bullet> bullet : bulletArray) {
-            bullet.getValue().setStateTime(bullet.getValue().getStateTime() + Gdx.graphics.getDeltaTime());
             TextureRegion currentState = mcAtk.getKeyFrame(bullet.getValue().getStateTime(), true);
             batch.draw(currentState, bullet.getKey().x, bullet.getKey().y, 25, 25);
             //batch.draw(mcAtkImage, bullet.getKey().x, bullet.getKey().y);
         }
+
+        //Draw image to each spiritAtk (bullet)
         for (Pair<Rectangle, Bullet> bullet : spiritBulletArray) {
             batch.draw(spiritAtkImage, bullet.getKey().x, bullet.getKey().y);
         }
+        //Draw image to each xp
         for (Pair<Rectangle, Xp> xp : xpArray) {
             batch.draw(xpImage, xp.getKey().x, xp.getKey().y);
         }
+        //Draw image to each chest
         for (Pair<Rectangle, Chest> chest : chestArray) {
             batch.draw(chestImage, chest.getKey().x, chest.getKey().y);
         }
@@ -183,6 +196,16 @@ public class GameScreen implements Screen {
         mc.getValue().drawMove(batch, mc.getKey());
 
         if (!leveledUp) {
+            for (Pair<Rectangle, Monster> monster : monsArray) {
+                monster.getValue().setStateTime(monster.getValue().getStateTime() + Gdx.graphics.getDeltaTime());
+            }
+
+            //Draw image to each heroAtk (bullet)
+            for (Pair<Rectangle, Bullet> bullet : bulletArray) {
+                bullet.getValue().setStateTime(bullet.getValue().getStateTime() + Gdx.graphics.getDeltaTime());
+            }
+
+
             spawnTime += Gdx.graphics.getDeltaTime();
             atkTime += Gdx.graphics.getDeltaTime();
             spiritAtkTime += Gdx.graphics.getDeltaTime();
