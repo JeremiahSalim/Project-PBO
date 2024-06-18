@@ -31,8 +31,8 @@ public class GameScreen implements Screen {
     private long lastSpawnTime;
     private long lastAttackTime;
     private long lastSpiritTime;
-    Array<Pair<Rectangle, Bullet>> bulletArray;
-    Array<Pair<Rectangle, Bullet>> spiritBulletArray;
+    private Array<Pair<Rectangle, Bullet>> bulletArray;
+    private Array<Pair<Rectangle, Bullet>> spiritBulletArray;
     float timeDelay = 0.2f;
     float timeSeconds = 0f;
     float skillDelay = 0.25f;
@@ -54,13 +54,14 @@ public class GameScreen implements Screen {
     private float spawnTime = 0f;
     private float spawnDelay = 0.9f;
 
+    private Spawner spawner;
+
 
 
 
     public GameScreen(MyGdxGame game) {
         this.game = game;
         batch = new SpriteBatch();
-        monsImage = new Texture(Gdx.files.internal("monster/mons.png"));
 
         spiritAtkImage = new Texture(Gdx.files.internal("hero/atk.png"));
 
@@ -117,7 +118,8 @@ public class GameScreen implements Screen {
 
         //generate spirit bullet array
         spiritBulletArray = new Array<>();
-        spawnMonster(monsImage);
+        spawner = new Spawner();
+        spawner.spawnMonster(camera, monsArray);
     }
 
     @Override
@@ -153,10 +155,10 @@ public class GameScreen implements Screen {
         for (Pair<Rectangle, Monster> monster : monsArray) {
             if (mc.getKey().x + mc.getKey().width/2 > monster.getKey().x) {
                 TextureRegion currentState = monster.getValue().getMonsAnimRight().getKeyFrame(monster.getValue().getStateTime(), true);
-                batch.draw(currentState, monster.getKey().x, monster.getKey().y, 64, 64);
+                batch.draw(currentState, monster.getKey().x, monster.getKey().y, monster.getKey().getWidth(), monster.getKey().getHeight());
             }else{
                 TextureRegion currentState = monster.getValue().getMonsAnimLeft().getKeyFrame(monster.getValue().getStateTime(), true);
-                batch.draw(currentState, monster.getKey().x, monster.getKey().y, 64, 64);
+                batch.draw(currentState, monster.getKey().x, monster.getKey().y, monster.getKey().getWidth(), monster.getKey().getHeight());
             }
 
         }
@@ -286,7 +288,7 @@ public class GameScreen implements Screen {
                         if (!monster.getValue().isLive()) {
                             long id = killSound.play();
                             killSound.setVolume(id, 0.1f);
-                            spawnCollectible(monster.getKey());
+                            spawner.spawnCollectible(monster.getKey(), xpArray, chestArray);
                             monsArray.removeValue(monster, false);
                         }
                     }
@@ -333,7 +335,7 @@ public class GameScreen implements Screen {
                 if (!monsterObject.isLive()) {
                     long id = killSound.play();
                     killSound.setVolume(id, 0.1f);
-                    spawnCollectible(monster);
+                    spawner.spawnCollectible(monster, xpArray, chestArray);
                     monsArray.removeValue(collision.getValue(), false);
                 }
             }
@@ -365,7 +367,7 @@ public class GameScreen implements Screen {
                 if (!monsterObject.isLive()) {
                     long id = killSound.play();
                     killSound.setVolume(id, 0.1f);
-                    spawnCollectible(monster);
+                    spawner.spawnCollectible(monster, xpArray, chestArray);
                     monsArray.removeValue(collision.getValue(), false);
                 }
             }
@@ -390,18 +392,18 @@ public class GameScreen implements Screen {
 
             //Interval time for hero to shoot magic bullet
             if (atkTime > atkDelay) {
-                spawnHeroAtk();
+                spawner.spawnHeroAtk(camera, mc, bulletArray);
                 atkTime -= atkDelay;
             }
 
             //Interval time spawn monster 900000000
             if (spawnTime > spawnDelay) {
-                spawnMonster(monsImage);
+                spawner.spawnMonster(camera, monsArray);
                 spawnTime -= spawnDelay;
             }
 
             if (spiritAtkTime > spiritAtkDelay) {
-                spawnSpiritAtk(monsterPair);
+                spawner.spawnSpiritAtk(monsterPair, mc, spiritBulletArray);
                 spiritAtkTime -= spiritAtkDelay;
             }
 
@@ -441,87 +443,87 @@ public class GameScreen implements Screen {
         img.dispose();
     }
 
-    private void spawnMonster(Texture monsImage) {
-        Rectangle monster = new Rectangle();
-        monster.width = monsImage.getWidth();
-        monster.height = monsImage.getHeight();
-        int randomize = MathUtils.random(0, 4);
-        if (randomize == 0) {
-            monster.x = camera.position.x - camera.viewportWidth / 2 - monster.width;
-            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
-        } else if (randomize == 1) {
-            monster.x = camera.position.x + camera.viewportWidth / 2;
-            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
-        } else if (randomize == 2) {
-            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
-            monster.y = camera.position.y - camera.viewportHeight / 2 - monster.height;
-        } else {
-            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
-            monster.y = camera.position.y + camera.viewportHeight / 2;
-        }
-
-        monsArray.add(new Pair<>(monster, new Monster()));
-        //lastSpawnTime = TimeUtils.nanoTime();
-    }
-
-    private void spawnHeroAtk() {
-        Rectangle heroAtk = new Rectangle();
-        heroAtk.x = mc.getKey().x + mc.getKey().width / 2;
-        heroAtk.y = mc.getKey().y + mc.getKey().height / 3;
-        heroAtk.width = 1;
-        heroAtk.height = 1;
-
-        Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-        Vector2 heroPos = new Vector2(mc.getKey().getPosition(new Vector2()));
-        camera.unproject(touchPos);
-        Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + mc.getKey().width / 2), (touchPos.y) - (heroPos.y + mc.getKey().height / 2));
-        bulletArray.add(new Pair<>(heroAtk, new Bullet(bulletDirection)));
-        //lastAttackTime = TimeUtils.nanoTime();
-    }
-
-    private void spawnSpiritAtk(Pair<Rectangle,Monster> monster) {
-        Rectangle spiritAtk = new Rectangle();
-        spiritAtk.x = mc.getKey().getX() - 60;
-        spiritAtk.y = mc.getKey().getY() + 60;
-        spiritAtk.width = 1;
-        spiritAtk.height = 1;
-
-        Vector2 monsPos = new Vector2(monster.getKey().getPosition(new Vector2()));
-        Vector2 spiritPos = new Vector2(mc.getKey().getPosition(new Vector2()));
-        spiritPos.x -= 60;
-        spiritPos.y += 60;
-        Vector2 bulletDirection = new Vector2((monsPos .x + monster.getKey().width/2) - (spiritPos.x ), (monsPos .y+ monster.getKey().width/2) - (spiritPos.y ));
-        spiritBulletArray.add(new Pair<>(spiritAtk, new Bullet(bulletDirection)));
-        //lastSpiritTime = TimeUtils.nanoTime();
-    }
-
-    private void spawnCollectible(Rectangle _monsters) {
-        Rectangle xp = new Rectangle();
-        xp.width = 25;
-        xp.height = 25;
-        xp.x = _monsters.x + _monsters.getWidth() / 2;
-        xp.y = _monsters.y + _monsters.getHeight() / 2;
-        int randomize = MathUtils.random(0, 100);
-        if (randomize >= 0 && randomize <= 49) {
-            xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
-        } else if (randomize >= 50 && randomize <= 79) {
-            xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
-        } else if (randomize >= 80 && randomize <= 98) {
-            xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x +_monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
-        }
-        else{
-            spawnChest(_monsters);
-        }
-    }
-
-    private void spawnChest(Rectangle _monsters) {
-        Rectangle chest = new Rectangle();
-        chest.width = 25;
-        chest.height = 25;
-        chest.x = _monsters.x + (float) monsImage.getWidth() / 2;
-        chest.y = _monsters.y + (float) monsImage.getHeight() / 2;
-        chestArray.add(new Pair<>(chest, new Chest(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
-    }
+//    private void spawnMonster(Texture monsImage) {
+//        Rectangle monster = new Rectangle();
+//        monster.width = monsImage.getWidth();
+//        monster.height = monsImage.getHeight();
+//        int randomize = MathUtils.random(0, 4);
+//        if (randomize == 0) {
+//            monster.x = camera.position.x - camera.viewportWidth / 2 - monster.width;
+//            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
+//        } else if (randomize == 1) {
+//            monster.x = camera.position.x + camera.viewportWidth / 2;
+//            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
+//        } else if (randomize == 2) {
+//            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
+//            monster.y = camera.position.y - camera.viewportHeight / 2 - monster.height;
+//        } else {
+//            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
+//            monster.y = camera.position.y + camera.viewportHeight / 2;
+//        }
+//
+//        monsArray.add(new Pair<>(monster, new Monster()));
+//        //lastSpawnTime = TimeUtils.nanoTime();
+//    }
+//
+//    private void spawnHeroAtk() {
+//        Rectangle heroAtk = new Rectangle();
+//        heroAtk.x = mc.getKey().x + mc.getKey().width / 2;
+//        heroAtk.y = mc.getKey().y + mc.getKey().height / 3;
+//        heroAtk.width = 1;
+//        heroAtk.height = 1;
+//
+//        Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+//        Vector2 heroPos = new Vector2(mc.getKey().getPosition(new Vector2()));
+//        camera.unproject(touchPos);
+//        Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + mc.getKey().width / 2), (touchPos.y) - (heroPos.y + mc.getKey().height / 2));
+//        bulletArray.add(new Pair<>(heroAtk, new Bullet(bulletDirection)));
+//        //lastAttackTime = TimeUtils.nanoTime();
+//    }
+//
+//    private void spawnSpiritAtk(Pair<Rectangle,Monster> monster) {
+//        Rectangle spiritAtk = new Rectangle();
+//        spiritAtk.x = mc.getKey().getX() - 60;
+//        spiritAtk.y = mc.getKey().getY() + 60;
+//        spiritAtk.width = 1;
+//        spiritAtk.height = 1;
+//
+//        Vector2 monsPos = new Vector2(monster.getKey().getPosition(new Vector2()));
+//        Vector2 spiritPos = new Vector2(mc.getKey().getPosition(new Vector2()));
+//        spiritPos.x -= 60;
+//        spiritPos.y += 60;
+//        Vector2 bulletDirection = new Vector2((monsPos .x + monster.getKey().width/2) - (spiritPos.x ), (monsPos .y+ monster.getKey().width/2) - (spiritPos.y ));
+//        spiritBulletArray.add(new Pair<>(spiritAtk, new Bullet(bulletDirection)));
+//        //lastSpiritTime = TimeUtils.nanoTime();
+//    }
+//
+//    private void spawnCollectible(Rectangle _monsters) {
+//        Rectangle xp = new Rectangle();
+//        xp.width = 25;
+//        xp.height = 25;
+//        xp.x = _monsters.x + _monsters.getWidth() / 2;
+//        xp.y = _monsters.y + _monsters.getHeight() / 2;
+//        int randomize = MathUtils.random(0, 100);
+//        if (randomize >= 0 && randomize <= 49) {
+//            xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
+//        } else if (randomize >= 50 && randomize <= 79) {
+//            xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
+//        } else if (randomize >= 80 && randomize <= 98) {
+//            xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x +_monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
+//        }
+//        else{
+//            spawnChest(_monsters);
+//        }
+//    }
+//
+//    private void spawnChest(Rectangle _monsters) {
+//        Rectangle chest = new Rectangle();
+//        chest.width = 25;
+//        chest.height = 25;
+//        chest.x = _monsters.x + (float) monsImage.getWidth() / 2;
+//        chest.y = _monsters.y + (float) monsImage.getHeight() / 2;
+//        chestArray.add(new Pair<>(chest, new Chest(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
+//    }
 
     //Loop array skill that hero currently have
     private void useSkill(Skill s){
