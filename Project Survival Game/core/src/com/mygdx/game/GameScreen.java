@@ -11,6 +11,9 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -56,6 +59,8 @@ public class GameScreen implements Screen {
 
     private Spawner spawner;
 
+    LeveledUpScreen levelScreen;
+
 
 
 
@@ -98,7 +103,7 @@ public class GameScreen implements Screen {
 
         //rectangle hero
         //set hero rectangle position and size
-        mc = new Pair<>(new Rectangle(), new Hero());
+        mc = new Pair<>(new Rectangle(), new Hero(levelScreen, this));
         mc.getKey().width = 64;
         mc.getKey().height = (mc.getKey().width * 157) / 120;
         mc.getKey().x = Gdx.graphics.getWidth() / 2 - mc.getKey().width / 2;
@@ -120,6 +125,8 @@ public class GameScreen implements Screen {
         spiritBulletArray = new Array<>();
         spawner = new Spawner();
         spawner.spawnMonster(camera, monsArray);
+
+        //Make new screen
     }
 
     @Override
@@ -142,11 +149,9 @@ public class GameScreen implements Screen {
         //Delay skill per 1 seconds
         skillSeconds += Gdx.graphics.getDeltaTime();
         for (Skill s : mc.getValue().getSkills()){
-            if (!(s instanceof SkillElectricField || s instanceof SkillSpirit)){
-                if (skillSeconds>skillDelay){
-                    useSkill(s);
-                }
-            }else useSkill(s);
+            if ((s instanceof SkillElectricField || s instanceof SkillSpirit)){
+                useSkill(s);
+            }
         }
 
 
@@ -190,14 +195,11 @@ public class GameScreen implements Screen {
         batch.end();
 
 
-
-        if (Gdx.input.isTouched()) leveledUp = true;
-        if (Gdx.input.isKeyPressed(Input.Keys.P)) leveledUp = false;
-
         //Draw Hero based on mcState
         mc.getValue().drawMove(batch, mc.getKey());
 
         if (!leveledUp) {
+            skillSeconds += Gdx.graphics.getDeltaTime();
             for (Pair<Rectangle, Monster> monster : monsArray) {
                 monster.getValue().setStateTime(monster.getValue().getStateTime() + Gdx.graphics.getDeltaTime());
             }
@@ -210,7 +212,6 @@ public class GameScreen implements Screen {
 
             spawnTime += Gdx.graphics.getDeltaTime();
             atkTime += Gdx.graphics.getDeltaTime();
-            spiritAtkTime += Gdx.graphics.getDeltaTime();
             //Change hero moveState based on KeyPressed
             batch.begin();
             if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.W)) {
@@ -248,6 +249,8 @@ public class GameScreen implements Screen {
 
             Pair<Rectangle,Monster> monsterPair = new Pair<>();
 
+
+
             for (Iterator<Pair<Rectangle, Monster>> monsterIter = monsArray.iterator(); monsterIter.hasNext(); ) {
                 Pair<Rectangle, Monster> monster = monsterIter.next();
                 //Getting monster and hero position
@@ -274,25 +277,31 @@ public class GameScreen implements Screen {
                         }
                     }
                 }
-
-                //check if electric field overlaps monster
-                int index = 0;
-                for (int i = 0; i < mc.getValue().getSkills().size(); i++) {
-                    if (mc.getValue().getSkills().get(i) instanceof SkillElectricField) {
-                        index = i;
-                    }
-                }
-                if (Intersector.overlaps(((SkillElectricField)(mc.getValue().getSkills().get(index))).getArea(), monster.getKey())){
-                    if (skillSeconds>skillDelay) {
-                        monster.getValue().isAttacked((int) mc.getValue().getSkills().get(index).getValue());
-                        if (!monster.getValue().isLive()) {
-                            long id = killSound.play();
-                            killSound.setVolume(id, 0.1f);
-                            spawner.spawnCollectible(monster.getKey(), xpArray, chestArray);
-                            monsArray.removeValue(monster, false);
+                //Check if hero have ElectroFieldSkill
+                for (Skill s:mc.getValue().getSkills()) {
+                    if(s instanceof SkillElectricField){
+                        //check if electric field overlaps monster
+                        int index = 0;
+                        for (int i = 0; i < mc.getValue().getSkills().size(); i++) {
+                            if (mc.getValue().getSkills().get(i) instanceof SkillElectricField) {
+                                index = i;
+                            }
+                        }
+                        if (Intersector.overlaps(((SkillElectricField)(mc.getValue().getSkills().get(index))).getArea(), monster.getKey())){
+                            if (skillSeconds>skillDelay) {
+                                monster.getValue().isAttacked((int) mc.getValue().getSkills().get(index).getValue());
+                                if (!monster.getValue().isLive()) {
+                                    long id = killSound.play();
+                                    killSound.setVolume(id, 0.1f);
+                                    spawner.spawnCollectible(monster.getKey(), xpArray, chestArray);
+                                    monsArray.removeValue(monster, false);
+                                }
+                            }
                         }
                     }
                 }
+
+
                 //speed of monster following hero
                 monster.getKey().x += direction.x * 1;
                 monster.getKey().y += direction.y * 1;
@@ -376,8 +385,6 @@ public class GameScreen implements Screen {
             for (Pair<Rectangle, Xp> exp : xpArray) {
                 if (mc.getKey().overlaps(exp.getKey())) {
                     mc.getValue().calculateXp(exp.getValue().getAmount());
-//                    System.out.println(mc.getValue().getXp());
-//                    System.out.println(mc.getValue().getLevel());
                     xpArray.removeValue(exp, false);
                 }
             }
@@ -386,6 +393,7 @@ public class GameScreen implements Screen {
             for (Pair<Rectangle, Chest> ch : chestArray) {
                 if (mc.getKey().overlaps(ch.getKey())) {
                     //Code goes here...
+                    levelScreen = new LeveledUpScreen(game, batch, ch.getValue().getList3Skill(), mc);
                     chestArray.removeValue(ch, false);
                 }
             }
@@ -402,9 +410,26 @@ public class GameScreen implements Screen {
                 spawnTime -= spawnDelay;
             }
 
-            if (spiritAtkTime > spiritAtkDelay) {
-                spawner.spawnSpiritAtk(monsterPair, mc, spiritBulletArray);
-                spiritAtkTime -= spiritAtkDelay;
+            boolean haveSkillSpirit = false;
+            for (Skill s:mc.getValue().getSkills()) {
+                if(s instanceof SkillSpirit){
+                    haveSkillSpirit = true;
+                }
+            }
+            if(haveSkillSpirit){
+                spiritAtkTime += Gdx.graphics.getDeltaTime();
+                if (spiritAtkTime > spiritAtkDelay) {
+                    spawner.spawnSpiritAtk(monsterPair, mc, spiritBulletArray);
+                    spiritAtkTime -= spiritAtkDelay;
+                }
+            }
+
+            for (Skill s:mc.getValue().getSkills()) {
+                if (s instanceof SkillRegenHP){
+                    if (skillSeconds>skillDelay){
+                        useSkill(s);
+                    }
+                }
             }
 
             //Refresh skillseconds
@@ -413,7 +438,8 @@ public class GameScreen implements Screen {
             }
 
         } else {
-            //Do anything when leveledUp
+            //Do anything when leveld up
+            levelScreen.render(Gdx.graphics.getDeltaTime());
         }
     }
 
@@ -528,5 +554,13 @@ public class GameScreen implements Screen {
     //Loop array skill that hero currently have
     private void useSkill(Skill s){
         s.skillEffect(mc, batch);
+    }
+
+    public Pair<Rectangle, Hero> getMc() {
+        return mc;
+    }
+
+    public void setLevelScreen(LeveledUpScreen levelScreen) {
+        this.levelScreen = levelScreen;
     }
 }

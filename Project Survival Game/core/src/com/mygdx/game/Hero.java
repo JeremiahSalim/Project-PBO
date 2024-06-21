@@ -22,18 +22,20 @@ public class Hero extends Entity implements  EntitiyAction{
     private Animation<TextureRegion> mcUp, mcDown, mcLeft, mcRight, mcNortheast, mcNorthwest, mcSoutheast, mcSouthWest;
     private float stateTime;
     private String mcState = "default";
-    public Hero() {
+    private LeveledUpScreen screen;
+    private GameScreen gameScreen;
+    public Hero(LeveledUpScreen screen, GameScreen gameScreen) {
         super(1000, 100);
         maxHp = 1000;
         xp = 0;
-        maxXp = 1000;
+        maxXp = 100;
         level = 1;
         skills = new ArrayList<Skill>(){{
-            add(new SkillRegenHP());
-            add(new SkillElectricField());
-            add(new SkillSpirit());
+
         }};
         create();
+        this.screen = screen;
+        this.gameScreen = gameScreen;
     }
 
 
@@ -141,6 +143,9 @@ public class Hero extends Entity implements  EntitiyAction{
             level++; //naikin lvlnya
             this.setXp(this.getXp()-maxXp); // buat Xp nya ulang dari 0 atau berapapun kalau ada sisanya
             this.maxXp += 100 * this.level-1;
+            screen = new LeveledUpScreen(gameScreen.game, gameScreen.batch, new Chest(0,0).getList3Skill(), gameScreen.getMc());
+            GameScreen.leveledUp = true;
+            gameScreen.setLevelScreen(screen);
         }
     }
 
@@ -185,6 +190,13 @@ public class Hero extends Entity implements  EntitiyAction{
     }
 
     public void addSkill(Skill _skill){
+        for (Skill s:skills) {
+            if(s.getClass() == _skill.getClass()){
+                s.upgradeSkill();
+                System.out.println("Upgrade Skill");
+                return;
+            }
+        }
         skills.add(_skill);
     }
 

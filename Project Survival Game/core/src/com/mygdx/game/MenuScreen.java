@@ -15,7 +15,6 @@ public class MenuScreen implements Screen {
     MyGdxGame game;
     SpriteBatch batch;
     OrthographicCamera camera;
-    BitmapFont font;
     private Animation<TextureRegion> title;
     float stateTime;
     Texture bgImage;
@@ -29,7 +28,6 @@ public class MenuScreen implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false ,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         viewport = new ScreenViewport(camera);
-        this.font = new BitmapFont();
         batch = new SpriteBatch();
         Texture rawTitle = new Texture("img/GameTitle.png");
         TextureRegion[][] titleFrames = TextureRegion.split(rawTitle, rawTitle.getWidth(), rawTitle.getHeight()/10);

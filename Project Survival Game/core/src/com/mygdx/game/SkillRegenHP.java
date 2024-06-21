@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 public class SkillRegenHP extends Skill{
     public SkillRegenHP() {
         super.setName("Jett Heal Me Jett");
-        super.setDescription("Regen HP for 1 Every Second");
+        super.setDescription("Regen HP for 1 Every Second\nIf already have add an additional 1 hp");
         super.setValue(1);
     }
     @Override
@@ -17,5 +17,10 @@ public class SkillRegenHP extends Skill{
         else{
             mc.getValue().setHp(mc.getValue().getMaxHp());
         }
+    }
+
+    @Override
+    public void upgradeSkill() {
+        setValue(getValue()+1);
     }
 }

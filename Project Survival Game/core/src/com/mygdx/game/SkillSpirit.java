@@ -10,7 +10,7 @@ public class SkillSpirit extends Skill{
     private Texture spirit;
     public SkillSpirit() {
         super.setName("Surprise Surprise Mother Father");
-        super.setDescription("Create a companion that will shoot bullet like the hero");
+        super.setDescription("Create a companion that will shoot bullet like the hero\nIf already have this skill, increase dmg by 10%");
         super.setValue(50);
         create();
     }
@@ -29,5 +29,8 @@ public class SkillSpirit extends Skill{
         batch.end();
     }
 
-
+    @Override
+    public void upgradeSkill() {
+        setValue(getValue()*110/100);
+    }
 }

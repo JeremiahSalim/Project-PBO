@@ -17,9 +17,7 @@ public class Skill {
     }
 
     public Skill() {
-        this.name = name;
-        this.description = description;
-        this.value = value;
+
     }
 
     public String getName() {
@@ -47,6 +45,10 @@ public class Skill {
     }
 
     public void skillEffect(Pair<Rectangle, Hero> mc, SpriteBatch batch){
+
+    }
+
+    public void upgradeSkill(){
 
     }
 }

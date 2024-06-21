@@ -16,7 +16,7 @@ public class SkillElectricField extends Skill{
 
     public SkillElectricField(){
         super.setName("Brrt Brrt");
-        super.setDescription("Create Electric Field Around Player and Damage Monster per Second");
+        super.setDescription("Create Electric Field Around Player and Damage Monster per Second\nIf already have this skill, increase dmg by 10%");
         super.setValue(25);
         create();
     }
@@ -70,12 +70,15 @@ public class SkillElectricField extends Skill{
     public void skillEffect(Pair<Rectangle, Hero> mc, SpriteBatch batch) {
         area.x = mc.getKey().getX() + mc.getKey().getWidth()/2;
         area.y = mc.getKey().getY() + mc.getKey().getHeight()/2;
-        System.out.println(area.x);
-        System.out.println(area.y);
         batch.begin();
         statetime += Gdx.graphics.getDeltaTime();
         TextureRegion currentState = electricField.getKeyFrame(statetime, true);
         batch.draw(currentState,area.x - area.radius -50, area.y - area.radius - 50, area.radius*2 +100, area.radius*2 + 100);
         batch.end();
+    }
+
+    @Override
+    public void upgradeSkill() {
+        setValue(getValue()*110/100);
     }
 }
