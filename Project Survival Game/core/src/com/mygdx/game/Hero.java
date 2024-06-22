@@ -22,9 +22,9 @@ public class Hero extends Entity implements  EntitiyAction{
     private Animation<TextureRegion> mcUp, mcDown, mcLeft, mcRight, mcNortheast, mcNorthwest, mcSoutheast, mcSouthWest;
     private float stateTime;
     private String mcState = "default";
-    private LeveledUpScreen screen;
+    private LeveledUpScreen levelScreen;
     private GameScreen gameScreen;
-    public Hero(LeveledUpScreen screen, GameScreen gameScreen) {
+    public Hero(LeveledUpScreen levelScreen, GameScreen gameScreen) {
         super(1000, 100);
         maxHp = 1000;
         xp = 0;
@@ -34,7 +34,7 @@ public class Hero extends Entity implements  EntitiyAction{
 
         }};
         create();
-        this.screen = screen;
+        this.levelScreen = levelScreen;
         this.gameScreen = gameScreen;
     }
 
@@ -143,9 +143,8 @@ public class Hero extends Entity implements  EntitiyAction{
             level++; //naikin lvlnya
             this.setXp(this.getXp()-maxXp); // buat Xp nya ulang dari 0 atau berapapun kalau ada sisanya
             this.maxXp += 100 * this.level-1;
-            screen = new LeveledUpScreen(gameScreen.game, gameScreen.batch, new Chest(0,0).getList3Skill(), gameScreen.getMc());
+            levelScreen.updateTable(new Chest(0,0).getList3Skill());
             GameScreen.leveledUp = true;
-            gameScreen.setLevelScreen(screen);
         }
     }
 

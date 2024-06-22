@@ -20,23 +20,21 @@ import java.util.ArrayList;
 
 public class LeveledUpScreen implements Screen {
 
-    MyGdxGame game;
-    SpriteBatch batch;
-    OrthographicCamera camera;
-    ScreenViewport viewport;
-    Stage stage;
-    Table skillTable;
-    Skin skin;
+    private MyGdxGame game;
+    private SpriteBatch batch;
+    private OrthographicCamera camera;
+    private ScreenViewport viewport;
+    private Stage stage;
+    private Table skillTable;
+    private Skin skin;
 
-    ArrayList<Skill> list3Skill;
+    private ArrayList<Skill> list3Skill;
 
-    Pair<Rectangle, Hero> mc;
+    private Pair<Rectangle, Hero> mc;
 
-    public LeveledUpScreen(final MyGdxGame game, SpriteBatch batch, ArrayList<Skill> list3Skill, Pair<Rectangle, Hero> mc) {
+    public LeveledUpScreen(final MyGdxGame game, SpriteBatch batch) {
         this.game = game;
         this.batch = batch;
-        this.list3Skill = list3Skill;
-        this.mc = mc;
         skin = new Skin(Gdx.files.internal("skin/pixthulhu-ui.json"));
         camera = new OrthographicCamera();
         camera.setToOrtho(false , Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -44,8 +42,6 @@ public class LeveledUpScreen implements Screen {
         stage = new Stage(viewport);
         skillTable = new Table();
         skillTable.setFillParent(true);
-
-        addButtonBasedOnSkill();
 
         stage.addActor(skillTable);
     }
@@ -61,7 +57,7 @@ public class LeveledUpScreen implements Screen {
             }
         });
         textButton.getLabel().setFontScale(0.5f,0.5f);
-        skillTable.add(textButton).pad(10).size(750, 130);
+        skillTable.add(textButton).pad(10).size(900, 130);
         skillTable.row();
     }
 
@@ -76,7 +72,7 @@ public class LeveledUpScreen implements Screen {
             }
         });
         textButton.getLabel().setFontScale(0.5f,0.5f);
-        skillTable.add(textButton).pad(10).size(750, 130);
+        skillTable.add(textButton).pad(10).size(900, 130);
         skillTable.row();
     }
 
@@ -89,6 +85,16 @@ public class LeveledUpScreen implements Screen {
                 addInstantSkillButton(s.getName()+'\n'+s.getDescription(), s);
             }
         }
+    }
+
+    public void updateTable (ArrayList<Skill> list3Skill){
+        this.list3Skill = new ArrayList<>(list3Skill);
+        skillTable.clear();
+        addButtonBasedOnSkill();
+    }
+
+    public void setMc(Pair<Rectangle, Hero> mc) {
+        this.mc = mc;
     }
 
     @Override

@@ -101,6 +101,10 @@ public class GameScreen implements Screen {
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         viewport = new ScreenViewport(camera);
 
+
+        //Make new screen
+        levelScreen = new LeveledUpScreen(game,batch);
+
         //rectangle hero
         //set hero rectangle position and size
         mc = new Pair<>(new Rectangle(), new Hero(levelScreen, this));
@@ -108,6 +112,8 @@ public class GameScreen implements Screen {
         mc.getKey().height = (mc.getKey().width * 157) / 120;
         mc.getKey().x = Gdx.graphics.getWidth() / 2 - mc.getKey().width / 2;
         mc.getKey().y = Gdx.graphics.getHeight() / 2 - mc.getKey().height / 2;
+
+        levelScreen.setMc(mc);
 
         //generate monster array rectangle and arrayobject
         monsArray = new Array<>();
@@ -125,8 +131,6 @@ public class GameScreen implements Screen {
         spiritBulletArray = new Array<>();
         spawner = new Spawner();
         spawner.spawnMonster(camera, monsArray);
-
-        //Make new screen
     }
 
     @Override
@@ -393,7 +397,8 @@ public class GameScreen implements Screen {
             for (Pair<Rectangle, Chest> ch : chestArray) {
                 if (mc.getKey().overlaps(ch.getKey())) {
                     //Code goes here...
-                    levelScreen = new LeveledUpScreen(game, batch, ch.getValue().getList3Skill(), mc);
+                    levelScreen.updateTable(ch.getValue().getList3Skill());
+                    leveledUp = true;
                     chestArray.removeValue(ch, false);
                 }
             }
