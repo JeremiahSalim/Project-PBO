@@ -142,7 +142,7 @@ public class Hero extends Entity implements  EntitiyAction{
         if(this.getXp() >= this.maxXp){ //leveling up
             level++; //naikin lvlnya
             this.setXp(this.getXp()-maxXp); // buat Xp nya ulang dari 0 atau berapapun kalau ada sisanya
-            this.maxXp += 100 * this.level-1;
+            this.maxXp += 20 * this.level-1;
             levelScreen.updateTable(new Chest(0,0).getList3Skill());
             GameScreen.leveledUp = true;
         }
