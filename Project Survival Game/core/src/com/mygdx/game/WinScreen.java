@@ -60,7 +60,8 @@ public class WinScreen implements Screen {
         batch.draw(bgImage,0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stateTime += Gdx.graphics.getDeltaTime();
         TextureRegion currentState = title.getKeyFrame(stateTime, true);
-        batch.draw(currentState, (float) Gdx.graphics.getWidth() /2 - (float) currentState.getRegionWidth()*0.75f, (float) Gdx.graphics.getHeight() /2 - currentState.getRegionHeight()*0.75f, (float) 576*1.5f, 43.4f*1.5f);        batch.draw(subTitle, (float) Gdx.graphics.getWidth() /2 -1097*0.2f , (float) Gdx.graphics.getHeight() /3 - 176*0.2f, 1097*0.4f, 176*0.4f);
+        batch.draw(currentState, (float) Gdx.graphics.getWidth() /2 - (float) currentState.getRegionWidth()*0.75f, (float) Gdx.graphics.getHeight() /2 - currentState.getRegionHeight()*0.75f, (float) 576*1.5f, 43.4f*1.5f);
+        batch.draw(subTitle, (float) Gdx.graphics.getWidth() /2 -1097*0.2f , (float) Gdx.graphics.getHeight() /3 - 176*0.2f, 1097*0.4f, 176*0.4f);
         batch.end();
 
         if (Gdx.input.isTouched()) {
