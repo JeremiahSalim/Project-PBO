@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -9,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class MenuScreen implements Screen {
@@ -20,6 +22,7 @@ public class MenuScreen implements Screen {
     Texture bgImage;
     ScreenViewport viewport;
     Texture subTitle;
+    Music bgMusic;
 
 
     public MenuScreen(final MyGdxGame game){
@@ -41,6 +44,10 @@ public class MenuScreen implements Screen {
         stateTime = 0f;
         bgImage = new Texture("bg/start_bg.png");
         subTitle = new Texture("img/subtitle.png");
+        bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/menuMusic.mp3"));
+        bgMusic.setLooping(true);
+        bgMusic.setVolume(0.5f);
+        bgMusic.play();
 
     }
     @Override
@@ -62,9 +69,16 @@ public class MenuScreen implements Screen {
         batch.draw(subTitle, (float) Gdx.graphics.getWidth() /2 -1097*0.2f , (float) Gdx.graphics.getHeight() /3 - 176*0.2f, 1097*0.4f, 176*0.4f);
         batch.end();
 
-        if (Gdx.input.isTouched()) {
-            game.setScreen(new GameScreen(game));
-        }
+        Timer timer = new Timer();
+        timer.scheduleTask(new Timer.Task() {
+            @Override
+            public void run() {
+                if (Gdx.input.isTouched()) {
+                    bgMusic.stop();
+                    game.setScreen(new GameScreen(game));
+                }
+            }
+        },1f);
     }
 
     @Override

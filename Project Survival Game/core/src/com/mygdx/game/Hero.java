@@ -7,8 +7,6 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
-import org.w3c.dom.css.Rect;
-import sun.jvm.hotspot.debugger.win32.coff.ExportDirectoryTable;
 
 import java.util.ArrayList;
 
@@ -17,6 +15,7 @@ public class Hero extends Entity implements  EntitiyAction{
     private int xp;
     private int maxXp;
     private int level;
+    private int maxLevel;
     ArrayList<Skill> skills;
     private Texture mcImage;
     private Animation<TextureRegion> mcUp, mcDown, mcLeft, mcRight, mcNortheast, mcNorthwest, mcSoutheast, mcSouthWest;
@@ -30,6 +29,7 @@ public class Hero extends Entity implements  EntitiyAction{
         xp = 0;
         maxXp = 100;
         level = 1;
+        maxLevel = 25;
         skills = new ArrayList<Skill>(){{
 
         }};
@@ -146,6 +146,21 @@ public class Hero extends Entity implements  EntitiyAction{
             levelScreen.updateTable(new Chest(0,0).getList3Skill());
             GameScreen.leveledUp = true;
         }
+    }
+
+    public boolean winState(){
+        if(this.getLevel() == this.getMaxLevel()){
+            return true;
+        }
+        else return false;
+    }
+
+    public int getMaxLevel() {
+        return maxLevel;
+    }
+
+    public void setMaxLevel(int maxLevel) {
+        this.maxLevel = maxLevel;
     }
 
     public int getMaxHp() {

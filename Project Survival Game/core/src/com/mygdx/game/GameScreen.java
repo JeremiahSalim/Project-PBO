@@ -28,7 +28,7 @@ public class GameScreen implements Screen {
     SpriteBatch batch;
     Texture img, monsImage, spiritAtkImage, bgImage, blank, xpImage, xpBar, chestImage;
 
-    Sound killSound;
+    Sound killSound, mcDead;
     Music bgMusic;
     OrthographicCamera camera;
     private long lastSpawnTime;
@@ -84,6 +84,7 @@ public class GameScreen implements Screen {
 
         killSound = Gdx.audio.newSound(Gdx.files.internal("sfx/kill.mp3"));
         bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
+        mcDead = Gdx.audio.newSound(Gdx.files.internal("sfx/dead.mp3"));
         bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
         //make the bgImage repeated
         bgImage.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
@@ -278,6 +279,9 @@ public class GameScreen implements Screen {
                         timeSeconds -= timeDelay;
                         mc.getValue().isAttacked(monster.getValue().getAtk());
                         if (!mc.getValue().isLive()) {
+                            bgMusic.stop();
+                            mcDead.play();
+                            game.setScreen(new GameOverScreen(game));
                         }
                     }
                 }
@@ -440,6 +444,11 @@ public class GameScreen implements Screen {
             //Refresh skillseconds
             if (skillSeconds>skillDelay){
                 skillSeconds -= skillDelay;
+            }
+
+            if(mc.getValue().winState()){
+                bgMusic.stop();
+                game.setScreen(new WinScreen(game));
             }
 
         } else {
