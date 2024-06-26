@@ -59,7 +59,7 @@ public class GameScreen implements Screen {
 
     private Spawner spawner;
 
-    LeveledUpScreen levelScreen;
+    private LeveledUpScreen levelScreen;
 
 
 
@@ -230,6 +230,10 @@ public class GameScreen implements Screen {
             } else if (Gdx.input.isKeyPressed(Input.Keys.D) && Gdx.input.isKeyPressed(Input.Keys.S)) {
                 mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
                 mc.getValue().setMcState("SE");
+            } else if (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.D)) {
+                mc.getValue().setMcState("default");
+            } else if (Gdx.input.isKeyPressed(Input.Keys.W) && Gdx.input.isKeyPressed(Input.Keys.S)) {
+                mc.getValue().setMcState("default");
             } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
                 mc.getValue().setStateTime(mc.getValue().getStateTime()+ Gdx.graphics.getDeltaTime());
                 mc.getValue().setMcState("Left");

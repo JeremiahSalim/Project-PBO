@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import org.w3c.dom.css.Rect;
 import sun.jvm.hotspot.debugger.win32.coff.ExportDirectoryTable;
 
@@ -319,18 +320,25 @@ public class Hero extends Entity implements  EntitiyAction{
     }
 
     public void move(Rectangle mcRectangle){
+        Vector2 direction = new Vector2(0,0);
+
         //Move Hero using WASD on keyboard
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            mcRectangle.x -= 150 * Gdx.graphics.getDeltaTime();
+            direction.x -= 1;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            mcRectangle.x += 150 * Gdx.graphics.getDeltaTime();
+            direction.x += 1;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            mcRectangle.y -= 150 * Gdx.graphics.getDeltaTime();
+            direction.y -= 1;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            mcRectangle.y += 150 * Gdx.graphics.getDeltaTime();
+            direction.y += 1;
         }
+
+        direction = direction.nor();
+
+        mcRectangle.x += direction.x * 2.5f;
+        mcRectangle.y += direction.y * 2.5f;
     }
 }
