@@ -8,8 +8,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import org.w3c.dom.css.Rect;
-import sun.jvm.hotspot.debugger.win32.coff.ExportDirectoryTable;
 
 import java.util.ArrayList;
 
@@ -18,6 +16,7 @@ public class Hero extends Entity implements  EntitiyAction{
     private int xp;
     private int maxXp;
     private int level;
+    private int maxLevel;
     ArrayList<Skill> skills;
     private Texture mcImage;
     private Animation<TextureRegion> mcUp, mcDown, mcLeft, mcRight, mcNortheast, mcNorthwest, mcSoutheast, mcSouthWest;
@@ -31,6 +30,7 @@ public class Hero extends Entity implements  EntitiyAction{
         xp = 0;
         maxXp = 100;
         level = 1;
+        maxLevel = 25;
         skills = new ArrayList<Skill>(){{
 
         }};
@@ -143,10 +143,25 @@ public class Hero extends Entity implements  EntitiyAction{
         if(this.getXp() >= this.maxXp){ //leveling up
             level++; //naikin lvlnya
             this.setXp(this.getXp()-maxXp); // buat Xp nya ulang dari 0 atau berapapun kalau ada sisanya
-            this.maxXp += 100 * this.level-1;
+            this.maxXp += 20 * this.level-1;
             levelScreen.updateTable(new Chest(0,0).getList3Skill());
             GameScreen.leveledUp = true;
         }
+    }
+
+    public boolean winState(){
+        if(this.getLevel() == this.getMaxLevel()){
+            return true;
+        }
+        else return false;
+    }
+
+    public int getMaxLevel() {
+        return maxLevel;
+    }
+
+    public void setMaxLevel(int maxLevel) {
+        this.maxLevel = maxLevel;
     }
 
     public int getMaxHp() {
