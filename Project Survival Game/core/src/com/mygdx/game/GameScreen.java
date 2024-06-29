@@ -8,15 +8,12 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import java.util.HashSet;
@@ -26,14 +23,10 @@ import java.util.Set;
 public class GameScreen implements Screen {
     MyGdxGame game;
     SpriteBatch batch;
-    Texture img, monsImage, spiritAtkImage, bgImage, blank, xpImage, xpBar, chestImage;
-
+    Texture img, spiritAtkImage, bgImage, blank, xpImage, xpBar, chestImage;
     Sound killSound, mcDead;
     Music bgMusic;
     OrthographicCamera camera;
-    private long lastSpawnTime;
-    private long lastAttackTime;
-    private long lastSpiritTime;
     private Array<Pair<Rectangle, Bullet>> bulletArray;
     private Array<Pair<Rectangle, Bullet>> spiritBulletArray;
     float timeDelay = 0.2f;
@@ -44,25 +37,21 @@ public class GameScreen implements Screen {
     private Array<Pair<Rectangle, Xp>> xpArray;
     private Array<Pair<Rectangle, Chest>> chestArray;
     private Array<Pair<Rectangle, Monster>> monsArray;
-
     private Pair<Rectangle, Hero> mc;
     private ScreenViewport viewport;
-
     private Animation<TextureRegion> mcAtk;
-
     private float atkTime = 0f;
     private float atkDelay = 0.9f;
     private float spiritAtkTime = 0f;
     private float spiritAtkDelay = 0.9f;
     private float spawnTime = 0f;
     private float spawnDelay = 0.9f;
-
     private Spawner spawner;
-
     private LeveledUpScreen levelScreen;
-
-
-
+    private BitmapFont font, displayTime;
+    private final static float time_out = 30;
+    private float timeMonsterHpIncrease = 0;
+    private float timeGameMinute = 0, timeGameSecond = 0;
 
     public GameScreen(MyGdxGame game) {
         this.game = game;
@@ -86,6 +75,7 @@ public class GameScreen implements Screen {
         bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sfx/bgMusic.mp3"));
         mcDead = Gdx.audio.newSound(Gdx.files.internal("sfx/dead.mp3"));
         bgImage = new Texture(Gdx.files.internal("bg/bg.jpg"));
+
         //make the bgImage repeated
         bgImage.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         blank = new Texture(Gdx.files.internal("bar/blank.jpeg"));
@@ -101,6 +91,12 @@ public class GameScreen implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         viewport = new ScreenViewport(camera);
+
+        //Generate BitMapFont
+        font = new BitmapFont();
+        font.getData().setScale((float)1.5,(float)1.5);
+        displayTime = new BitmapFont();
+        displayTime.getData().setScale((float)1.2,(float)1.2);
 
 
         //Make new screen
@@ -197,8 +193,32 @@ public class GameScreen implements Screen {
 
         //Draw xp Bar
         batch.draw(xpBar, mc.getKey().getX() + mc.getKey().getWidth()/2 - camera.viewportWidth / 2, mc.getKey().getY() + mc.getKey().getHeight()/2 + camera.viewportHeight / 2 - 10, Gdx.graphics.getWidth() * ((float) mc.getValue().getXp() / mc.getValue().getMaxXp()), 10);
-        batch.end();
 
+        //Draw Hero Current level On Scren using BitMapFont
+        font.draw(batch,"Level : "+mc.getValue().getLevel(),mc.getKey().getX() + mc.getKey().getWidth()/2 - camera.viewportWidth / 2 + 20,mc.getKey().getY() + mc.getKey().getHeight()/2 + camera.viewportHeight / 2 - 20);
+
+        //Draw displayTime on Screen using BitMapFont
+        timeGameSecond += Gdx.graphics.getDeltaTime();
+        String minute ="", second ="";
+
+        if(timeGameSecond<10){
+            second = "0"+(int)timeGameSecond;
+        } else{
+            second = String.valueOf((int)timeGameSecond);
+        }
+
+        if(timeGameMinute<10){
+            minute = "0"+(int)timeGameMinute;
+        } else{
+            minute = String.valueOf((int)timeGameMinute);
+        }
+        if(timeGameSecond >= 60){
+            timeGameMinute++;
+            timeGameSecond = 0;
+        }
+        displayTime.draw(batch, minute+":"+second ,mc.getKey().getX()- camera.viewportWidth / 2 + Gdx.graphics.getWidth()/2 ,mc.getKey().getY() + mc.getKey().getHeight()/2 + camera.viewportHeight / 2 - 30);
+
+        batch.end();
 
         //Draw Hero based on mcState
         mc.getValue().drawMove(batch, mc.getKey());
@@ -253,12 +273,9 @@ public class GameScreen implements Screen {
             //Move the mc
             mc.getValue().move(mc.getKey());
 
-
             float distance = 5000f;
 
             Pair<Rectangle,Monster> monsterPair = new Pair<>();
-
-
 
             for (Iterator<Pair<Rectangle, Monster>> monsterIter = monsArray.iterator(); monsterIter.hasNext(); ) {
                 Pair<Rectangle, Monster> monster = monsterIter.next();
@@ -423,6 +440,28 @@ public class GameScreen implements Screen {
                 spawnTime -= spawnDelay;
             }
 
+            //Increasing The Monster Spawn Time By hero Level 5, 10, 15, 20, 23
+            if(mc.getValue().getLevel() == 5){
+                spawnDelay = 0.7f;
+            } else if (mc.getValue().getLevel() == 10) {
+                spawnDelay = 0.5f;
+            } else if (mc.getValue().getLevel() == 15) {
+                spawnDelay = 0.3f;
+            } else if (mc.getValue().getLevel() == 20) {
+                spawnDelay = 0.1f;
+            } else if (mc.getValue().getLevel() == 23) {
+                spawnDelay = 0.01f;
+            } else {
+                //Nothing To DO when Hero Lvl Not 5, 10, 15, 20, 23
+            }
+
+            //Increase Monster HP per Interval Time
+            timeMonsterHpIncrease += Gdx.graphics.getDeltaTime();
+            if(timeMonsterHpIncrease > time_out){
+                monsterPair.getValue().increaseHp();
+                timeMonsterHpIncrease = 0;
+            }
+
             boolean haveSkillSpirit = false;
             for (Skill s:mc.getValue().getSkills()) {
                 if(s instanceof SkillSpirit){
@@ -486,88 +525,6 @@ public class GameScreen implements Screen {
         batch.dispose();
         img.dispose();
     }
-
-//    private void spawnMonster(Texture monsImage) {
-//        Rectangle monster = new Rectangle();
-//        monster.width = monsImage.getWidth();
-//        monster.height = monsImage.getHeight();
-//        int randomize = MathUtils.random(0, 4);
-//        if (randomize == 0) {
-//            monster.x = camera.position.x - camera.viewportWidth / 2 - monster.width;
-//            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
-//        } else if (randomize == 1) {
-//            monster.x = camera.position.x + camera.viewportWidth / 2;
-//            monster.y = MathUtils.random(camera.position.y - camera.viewportHeight / 2, camera.position.y + camera.viewportHeight / 2);
-//        } else if (randomize == 2) {
-//            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
-//            monster.y = camera.position.y - camera.viewportHeight / 2 - monster.height;
-//        } else {
-//            monster.x = MathUtils.random(camera.position.x - camera.viewportWidth / 2, camera.position.x + camera.viewportWidth / 2);
-//            monster.y = camera.position.y + camera.viewportHeight / 2;
-//        }
-//
-//        monsArray.add(new Pair<>(monster, new Monster()));
-//        //lastSpawnTime = TimeUtils.nanoTime();
-//    }
-//
-//    private void spawnHeroAtk() {
-//        Rectangle heroAtk = new Rectangle();
-//        heroAtk.x = mc.getKey().x + mc.getKey().width / 2;
-//        heroAtk.y = mc.getKey().y + mc.getKey().height / 3;
-//        heroAtk.width = 1;
-//        heroAtk.height = 1;
-//
-//        Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-//        Vector2 heroPos = new Vector2(mc.getKey().getPosition(new Vector2()));
-//        camera.unproject(touchPos);
-//        Vector2 bulletDirection = new Vector2((touchPos.x) - (heroPos.x + mc.getKey().width / 2), (touchPos.y) - (heroPos.y + mc.getKey().height / 2));
-//        bulletArray.add(new Pair<>(heroAtk, new Bullet(bulletDirection)));
-//        //lastAttackTime = TimeUtils.nanoTime();
-//    }
-//
-//    private void spawnSpiritAtk(Pair<Rectangle,Monster> monster) {
-//        Rectangle spiritAtk = new Rectangle();
-//        spiritAtk.x = mc.getKey().getX() - 60;
-//        spiritAtk.y = mc.getKey().getY() + 60;
-//        spiritAtk.width = 1;
-//        spiritAtk.height = 1;
-//
-//        Vector2 monsPos = new Vector2(monster.getKey().getPosition(new Vector2()));
-//        Vector2 spiritPos = new Vector2(mc.getKey().getPosition(new Vector2()));
-//        spiritPos.x -= 60;
-//        spiritPos.y += 60;
-//        Vector2 bulletDirection = new Vector2((monsPos .x + monster.getKey().width/2) - (spiritPos.x ), (monsPos .y+ monster.getKey().width/2) - (spiritPos.y ));
-//        spiritBulletArray.add(new Pair<>(spiritAtk, new Bullet(bulletDirection)));
-//        //lastSpiritTime = TimeUtils.nanoTime();
-//    }
-//
-//    private void spawnCollectible(Rectangle _monsters) {
-//        Rectangle xp = new Rectangle();
-//        xp.width = 25;
-//        xp.height = 25;
-//        xp.x = _monsters.x + _monsters.getWidth() / 2;
-//        xp.y = _monsters.y + _monsters.getHeight() / 2;
-//        int randomize = MathUtils.random(0, 100);
-//        if (randomize >= 0 && randomize <= 49) {
-//            xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
-//        } else if (randomize >= 50 && randomize <= 79) {
-//            xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
-//        } else if (randomize >= 80 && randomize <= 98) {
-//            xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x +_monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
-//        }
-//        else{
-//            spawnChest(_monsters);
-//        }
-//    }
-//
-//    private void spawnChest(Rectangle _monsters) {
-//        Rectangle chest = new Rectangle();
-//        chest.width = 25;
-//        chest.height = 25;
-//        chest.x = _monsters.x + (float) monsImage.getWidth() / 2;
-//        chest.y = _monsters.y + (float) monsImage.getHeight() / 2;
-//        chestArray.add(new Pair<>(chest, new Chest(_monsters.x + (float) monsImage.getWidth() / 2, _monsters.y + (float) monsImage.getHeight() / 2)));
-//    }
 
     //Loop array skill that hero currently have
     private void useSkill(Skill s){

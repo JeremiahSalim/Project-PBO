@@ -78,4 +78,8 @@ public class Monster extends Entity implements EntitiyAction{
     public void setMonsAnimLeft(Animation<TextureRegion> monsAnimLeft) {
         this.monsAnimLeft = monsAnimLeft;
     }
+
+    public void increaseHp(){
+        this.setHp(this.getHp()+10);
+    }
 }

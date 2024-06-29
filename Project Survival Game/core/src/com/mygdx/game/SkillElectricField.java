@@ -17,7 +17,7 @@ public class SkillElectricField extends Skill{
     public SkillElectricField(){
         super.setName("Brrt Brrt");
         super.setDescription("Create Electric Field Around Player and Damage Monster per Second\nIf already have this skill, increase dmg by 10%");
-        super.setValue(25);
+        super.setValue(15); //DMG
         create();
     }
 
