@@ -73,12 +73,12 @@ public class Spawner {
         xp.height = 25;
         xp.x = _monsters.x + _monsters.getWidth() / 2;
         xp.y = _monsters.y + _monsters.getHeight() / 2;
-        int randomize = MathUtils.random(0, 100);
-        if (randomize >= 0 && randomize <= 49) {
+        int randomize = MathUtils.random(0, 1000);
+        if (randomize >= 0 && randomize <= 499) {
             xpArray.add(new Pair<>(xp, new SmallXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
-        } else if (randomize >= 50 && randomize <= 79) {
+        } else if (randomize >= 50 && randomize <= 799) {
             xpArray.add(new Pair<>(xp, new MediumXp(_monsters.x + _monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
-        } else if (randomize >= 80 && randomize <= 98) {
+        } else if (randomize >= 80 && randomize <= 998) {
             xpArray.add(new Pair<>(xp, new LargeXp(_monsters.x +_monsters.getWidth() / 2 - xp.getWidth()/2, _monsters.y + _monsters.getHeight() / 2 - xp.getHeight()/2)));
         }
         else{
